@@ -1,18 +1,16 @@
-import jwt from 'jsonwebtoken';
-import { getSql } from '../_db';
+const jwt = require('jsonwebtoken');
+const { getSql } = require('../_db');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== 'GET') {
-    res.status(405).json({ message: 'Method not allowed' });
-    return;
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const auth = req.headers.authorization || '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
     if (!token) {
-      res.status(401).json({ message: 'No token' });
-      return;
+      return res.status(401).json({ message: 'No token' });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
     const userId = decoded.userId;
@@ -23,10 +21,9 @@ export default async function handler(req, res) {
     `;
     const user = rows[0];
     if (!user) {
-      res.status(401).json({ message: 'User not found' });
-      return;
+      return res.status(401).json({ message: 'User not found' });
     }
-    res.json({
+    return res.json({
       user: {
         id: user.id,
         name: user.name,
@@ -38,8 +35,8 @@ export default async function handler(req, res) {
       }
     });
   } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
+    return res.status(401).json({ message: 'Invalid token' });
   }
-}
+};
 
 

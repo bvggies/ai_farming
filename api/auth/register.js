@@ -1,28 +1,25 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { getSql } from '../_db';
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { getSql } = require('../_db');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const { name, email, password, farmSize = '', poultryType = '', preferredLanguage = 'en' } = req.body || {};
-    
     if (!name || !email || !password || password.length < 6) {
       return res.status(400).json({ message: 'Invalid input. Name, email, and password (min 6 chars) are required.' });
     }
 
     const sql = getSql();
 
-    // Check if user exists
     const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
     if (existing && existing.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash password and create user
     const hashed = await bcrypt.hash(password, 10);
     const inserted = await sql`
       INSERT INTO users (name, email, password, farm_size, poultry_type, preferred_language, role, is_active)
@@ -35,11 +32,7 @@ export default async function handler(req, res) {
     }
 
     const user = inserted[0];
-    const token = jwt.sign(
-      { userId: user.id }, 
-      process.env.JWT_SECRET || 'fallback_secret', 
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
 
     return res.status(201).json({
       token,
@@ -55,9 +48,8 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Registration error:', err);
-    return res.status(500).json({ 
-      message: 'Server error', 
-      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error' 
-    });
+    return res.status(500).json({ message: 'Server error' });
   }
-}
+};
+
+

@@ -1,18 +1,16 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { getSql } from '../_db';
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { getSql } = require('../_db');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== 'POST') {
-    res.status(405).json({ message: 'Method not allowed' });
-    return;
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const { email, password } = req.body || {};
     if (!email || !password) {
-      res.status(400).json({ message: 'Invalid input' });
-      return;
+      return res.status(400).json({ message: 'Invalid input' });
     }
 
     const sql = getSql();
@@ -22,23 +20,20 @@ export default async function handler(req, res) {
     `;
     const user = rows[0];
     if (!user) {
-      res.status(400).json({ message: 'Invalid credentials' });
-      return;
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
-      res.status(400).json({ message: 'Invalid credentials' });
-      return;
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     if (!user.is_active) {
-      res.status(403).json({ message: 'Account is inactive' });
-      return;
+      return res.status(403).json({ message: 'Account is inactive' });
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
-    res.json({
+    return res.json({
       token,
       user: {
         id: user.id,
@@ -51,8 +46,9 @@ export default async function handler(req, res) {
       }
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error('Login error:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
-}
+};
 
 
