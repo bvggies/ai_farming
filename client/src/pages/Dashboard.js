@@ -9,7 +9,7 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [postsRes, knowledgeRes] = await Promise.all([
+        const [postsRes] = await Promise.all([
           api.get('/posts?limit=5'),
           api.get('/knowledge?limit=5')
         ]);
