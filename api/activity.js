@@ -33,20 +33,49 @@ module.exports = async (req, res) => {
         : [];
 
       const farmLogs = farmLogsExists[0]?.exists
-        ? await sql`SELECT * FROM farm_logs WHERE user_id = ${userId} ORDER BY log_date DESC LIMIT 30`
+        ? await sql`SELECT * FROM farm_logs WHERE user_id = ${userId} ORDER BY log_date DESC LIMIT 60`
         : [];
 
-      // Aggregates
-      let aggregates = { totalBirds: 0, avgFeedKg: 0, lastLogDate: null };
-      if (farmLogs.length > 0) {
-        const birds = farmLogs.map(f => Number(f.num_birds || 0));
-        const feedKg = farmLogs.map(f => Number(f.daily_feed_kg || 0));
-        aggregates.totalBirds = birds[0] || 0;
-        aggregates.avgFeedKg = feedKg.length ? (feedKg.reduce((a,b)=>a+b,0) / feedKg.length).toFixed(2) : 0;
-        aggregates.lastLogDate = farmLogs[0].log_date;
+      // Aggregates & Analytics (last 7 days)
+      const today = new Date();
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        days.push(d.toISOString().slice(0,10));
       }
 
-      return res.json({
+      const logsByDate = farmLogs.reduce((acc, l) => {
+        const key = (l.log_date instanceof Date ? l.log_date.toISOString().slice(0,10) : String(l.log_date));
+        acc[key] = l;
+        return acc;
+      }, {});
+
+      const trend = days.map(dateStr => {
+        const l = logsByDate[dateStr];
+        return {
+          date: dateStr,
+          feedKg: Number(l?.daily_feed_kg || 0),
+          mortality: Number(l?.mortality || 0),
+          numBirds: Number(l?.num_birds || 0)
+        };
+      });
+
+      const totalFeedKg7d = trend.reduce((s, t) => s + t.feedKg, 0);
+      const totalMortality7d = trend.reduce((s, t) => s + t.mortality, 0);
+      const avgFeedKg7d = trend.length ? totalFeedKg7d / trend.length : 0;
+      const currentBirds = farmLogs.length ? Number(farmLogs[0].num_birds || 0) : 0;
+      const feedPerBirdAvg = currentBirds > 0 ? (avgFeedKg7d / currentBirds) : 0;
+
+      // History: recent 15 farm log entries
+      const history = farmLogs.slice(0, 15).map(l => ({
+        id: l.id,
+        date: l.log_date,
+        title: `Farm Log • ${new Date(l.log_date).toLocaleDateString()}`,
+        details: `Birds: ${l.num_birds || 0}, Feed: ${l.daily_feed_kg || 0} kg, Mortality: ${l.mortality || 0}${l.notes ? ` • ${l.notes}` : ''}`
+      }));
+
+      const response = {
         feedingSchedules: feedingSchedules.map(s => ({
           id: s.id,
           timeOfDay: s.time_of_day,
@@ -63,8 +92,23 @@ module.exports = async (req, res) => {
           mortality: l.mortality,
           notes: l.notes
         })),
-        aggregates
-      });
+        aggregates: {
+          totalBirds: currentBirds,
+          avgFeedKg: Number(avgFeedKg7d.toFixed(2)),
+          lastLogDate: farmLogs[0]?.log_date || null
+        },
+        analytics: {
+          days: trend,
+          totalFeedKg7d: Number(totalFeedKg7d.toFixed(2)),
+          avgFeedKg7d: Number(avgFeedKg7d.toFixed(2)),
+          totalMortality7d: totalMortality7d,
+          feedPerBirdAvg: Number(feedPerBirdAvg.toFixed(4)),
+          scheduleCount: feedingSchedules.length
+        },
+        history
+      };
+
+      return res.json(response);
     } catch (err) {
       return res.status(500).json({ message: 'Server error', error: err.message });
     }

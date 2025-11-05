@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   FiMessageSquare, FiBook, FiSettings, FiArrowRight, FiTrendingUp,
   FiCalendar, FiClock, FiBell, FiActivity, FiBarChart2, FiPlus,
-  FiCheckCircle, FiX, FiAlertCircle
+  FiCheckCircle, FiX
 } from 'react-icons/fi';
 import api from '../services/api';
 import './Dashboard.css';
@@ -27,6 +27,8 @@ const Dashboard = ({ user }) => {
   const [farmLogs, setFarmLogs] = useState([]);
   const [feedingForm, setFeedingForm] = useState({ timeOfDay: '08:00', feedType: '', rationGrams: 0, notes: '' });
   const [farmForm, setFarmForm] = useState({ logDate: '', numBirds: '', feedType: '', dailyFeedKg: '', mortality: '', notes: '' });
+  const [activityAnalytics, setActivityAnalytics] = useState(null);
+  const [activityHistory, setActivityHistory] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -40,13 +42,15 @@ const Dashboard = ({ user }) => {
       const [postsRes, remindersRes, activityRes] = await Promise.all([
         api.get('/posts?limit=5').catch(() => ({ data: [] })),
         api.get('/reminders').catch(() => ({ data: [] })),
-        api.get('/activity').catch(() => ({ data: { feedingSchedules: [], farmLogs: [], aggregates: {} } }))
+        api.get('/activity').catch(() => ({ data: { feedingSchedules: [], farmLogs: [], aggregates: {}, analytics: null, history: [] } }))
       ]);
       
       setRecentPosts(postsRes.data);
       setReminders(remindersRes.data || []);
       setFeedingSchedules(activityRes.data.feedingSchedules || []);
       setFarmLogs(activityRes.data.farmLogs || []);
+      setActivityAnalytics(activityRes.data.analytics || null);
+      setActivityHistory(activityRes.data.history || []);
       
       // Calculate stats
       const today = new Date();
@@ -117,24 +121,6 @@ const Dashboard = ({ user }) => {
       .slice(0, 5);
   };
 
-  const getReminderTypeIcon = (type) => {
-    switch(type) {
-      case 'vaccination': return '💉';
-      case 'feeding': return '🌾';
-      case 'medication': return '💊';
-      default: return '📅';
-    }
-  };
-
-  const getDaysUntil = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const reminderDate = new Date(date);
-    reminderDate.setHours(0, 0, 0, 0);
-    const diff = Math.ceil((reminderDate - today) / (1000 * 60 * 60 * 24));
-    return diff;
-  };
-
   const handleAddFeedingSchedule = async (e) => {
     e.preventDefault();
     try {
@@ -156,6 +142,9 @@ const Dashboard = ({ user }) => {
       alert(err.response?.data?.message || 'Failed to save farm data');
     }
   };
+
+  const maxFeed = activityAnalytics?.days?.reduce((m, d) => Math.max(m, d.feedKg), 0) || 1;
+  const maxMort = activityAnalytics?.days?.reduce((m, d) => Math.max(m, d.mortality), 0) || 1;
 
   return (
     <div className="dashboard-container">
@@ -255,10 +244,10 @@ const Dashboard = ({ user }) => {
               {getUpcomingReminders().length > 0 ? (
                 <div className="reminders-list">
                   {getUpcomingReminders().map(reminder => {
-                    const daysUntil = getDaysUntil(reminder.reminderDate);
+                    const daysUntil = Math.ceil((new Date(reminder.reminderDate) - new Date()) / (1000 * 60 * 60 * 24));
                     return (
                       <div key={reminder.id} className="reminder-item">
-                        <div className="reminder-icon">{getReminderTypeIcon(reminder.type)}</div>
+                        <div className="reminder-icon">{reminder.type === 'vaccination' ? '💉' : reminder.type === 'feeding' ? '🌾' : reminder.type === 'medication' ? '💊' : '📅'}</div>
                         <div className="reminder-content">
                           <h4>{reminder.title}</h4>
                           <p>{reminder.description}</p>
@@ -270,18 +259,10 @@ const Dashboard = ({ user }) => {
                           </small>
                         </div>
                         <div className="reminder-actions">
-                          <button 
-                            className="btn-icon btn-success" 
-                            onClick={() => handleCompleteReminder(reminder.id)}
-                            title="Mark Complete"
-                          >
+                          <button className="btn-icon btn-success" onClick={() => handleCompleteReminder(reminder.id)} title="Mark Complete">
                             <FiCheckCircle />
                           </button>
-                          <button 
-                            className="btn-icon btn-danger" 
-                            onClick={() => handleDeleteReminder(reminder.id)}
-                            title="Delete"
-                          >
+                          <button className="btn-icon btn-danger" onClick={() => handleDeleteReminder(reminder.id)} title="Delete">
                             <FiX />
                           </button>
                         </div>
@@ -356,6 +337,112 @@ const Dashboard = ({ user }) => {
 
       {activeTab === 'activity' && (
         <div className="dashboard-grid">
+          {/* Analytics */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2><FiBarChart2 /> Activity Analytics (7 days)</h2>
+            </div>
+            {activityAnalytics ? (
+              <>
+                <div className="stats-grid">
+                  <div className="stat-card stat-blue">
+                    <div className="stat-icon"><FiBarChart2 /></div>
+                    <div className="stat-info">
+                      <h3>Total Feed (kg)</h3>
+                      <p className="stat-value">{activityAnalytics.totalFeedKg7d}</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-green">
+                    <div className="stat-icon"><FiActivity /></div>
+                    <div className="stat-info">
+                      <h3>Avg Feed/Day (kg)</h3>
+                      <p className="stat-value">{activityAnalytics.avgFeedKg7d}</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-purple">
+                    <div className="stat-icon"><FiActivity /></div>
+                    <div className="stat-info">
+                      <h3>Feed/Bird/Day (kg)</h3>
+                      <p className="stat-value">{activityAnalytics.feedPerBirdAvg}</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-orange">
+                    <div className="stat-icon"><FiActivity /></div>
+                    <div className="stat-info">
+                      <h3>Mortality (7d)</h3>
+                      <p className="stat-value">{activityAnalytics.totalMortality7d}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="dashboard-card" style={{ padding: 0 }}>
+                  <div style={{ padding: 20 }}>
+                    <h3 style={{ marginTop: 0 }}>Feed (kg) by Day</h3>
+                    {activityAnalytics.days && activityAnalytics.days.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
+                        {activityAnalytics.days.map((d, idx) => (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                            <div style={{ height: 80, width: '100%', background: '#f0f0f0', borderRadius: 6, display: 'flex', alignItems: 'flex-end' }}>
+                              <div style={{ width: '100%', height: `${maxFeed ? (d.feedKg / maxFeed) * 100 : 0}%`, background: 'linear-gradient(90deg, #4CAF50, #45a049)', borderRadius: 6 }} />
+                            </div>
+                            <small style={{ color: '#666' }}>{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })}</small>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: '#666' }}>No data</p>
+                    )}
+                  </div>
+
+                  <div style={{ padding: 20 }}>
+                    <h3 style={{ marginTop: 0 }}>Mortality by Day</h3>
+                    {activityAnalytics.days && activityAnalytics.days.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
+                        {activityAnalytics.days.map((d, idx) => (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                            <div style={{ height: 80, width: '100%', background: '#f0f0f0', borderRadius: 6, display: 'flex', alignItems: 'flex-end' }}>
+                              <div style={{ width: '100%', height: `${maxMort ? (d.mortality / maxMort) * 100 : 0}%`, background: 'linear-gradient(90deg, #ff9800, #fb8c00)', borderRadius: 6 }} />
+                            </div>
+                            <small style={{ color: '#666' }}>{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })}</small>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: '#666' }}>No data</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="empty-state">
+                <p>No analytics yet. Add farm data to see insights.</p>
+              </div>
+            )}
+          </div>
+
+          {/* History */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2><FiActivity /> Activity History</h2>
+            </div>
+            {activityHistory && activityHistory.length > 0 ? (
+              <div className="posts-list">
+                {activityHistory.map(ev => (
+                  <div key={ev.id} className="post-item">
+                    <h4>{ev.title}</h4>
+                    <p className="post-meta">{new Date(ev.date).toLocaleDateString()}</p>
+                    <p className="post-excerpt">{ev.details}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>No activity yet. Add farm data to see history.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Feeding Schedules */}
           <div className="dashboard-card">
             <div className="card-header">
               <h2><FiClock /> Feeding Schedules</h2>
@@ -403,6 +490,7 @@ const Dashboard = ({ user }) => {
             )}
           </div>
 
+          {/* Farm Data */}
           <div className="dashboard-card">
             <div className="card-header">
               <h2><FiBarChart2 /> Farm Data</h2>
