@@ -71,9 +71,25 @@ module.exports = async (req, res) => {
         return res.status(400).json({ message: 'Title and content are required' });
       }
 
+      // Ensure table exists
+      const tableCheck = await sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'knowledge_base'
+        ) as exists
+      `;
+      
+      if (!tableCheck[0]?.exists) {
+        return res.status(500).json({ message: 'Knowledge base table does not exist. Please run the SQL schema.' });
+      }
+
+      const tagsArray = Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+      const keywordsArray = Array.isArray(keywords) ? keywords : (keywords ? keywords.split(',').map(k => k.trim()).filter(Boolean) : []);
+
       const inserted = await sql`
         INSERT INTO knowledge_base (title, content, category, tags, keywords, is_ai_verified, created_by_id)
-        VALUES (${title}, ${content}, ${category || 'general'}, ${tags || []}, ${keywords || []}, ${isAIVerified || false}, ${decoded.userId})
+        VALUES (${title}, ${content}, ${category || 'general'}, ${tagsArray}, ${keywordsArray}, ${isAIVerified || false}, ${decoded.userId})
         RETURNING *
       `;
 

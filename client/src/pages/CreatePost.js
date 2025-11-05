@@ -33,15 +33,17 @@ const CreatePost = ({ user }) => {
     setLoading(true);
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('content', formData.content);
-      formDataToSend.append('type', formData.type);
-      formData.images.forEach((image) => {
-        formDataToSend.append('images', image);
-      });
+      // For now, send JSON only. Images uploading will be added later.
+      if (formData.images && formData.images.length > 0) {
+        alert('Image uploading will be added soon. Your post will be created without images.');
+      }
 
-      await api.post('/posts', formDataToSend);
+      await api.post('/posts', {
+        title: formData.title,
+        content: formData.content,
+        type: formData.type,
+        imageUrls: []
+      });
 
       navigate('/posts');
     } catch (err) {
@@ -94,7 +96,7 @@ const CreatePost = ({ user }) => {
           </div>
 
           <div className="form-group">
-            <label>Images (optional, max 5)</label>
+            <label>Images (optional, coming soon)</label>
             <input
               type="file"
               multiple
@@ -103,7 +105,7 @@ const CreatePost = ({ user }) => {
               style={{ padding: '8px' }}
             />
             <small style={{ color: '#666', display: 'block', marginTop: '5px' }}>
-              You can upload up to 5 images (max 5MB each)
+              Image upload support will be added soon.
             </small>
           </div>
 

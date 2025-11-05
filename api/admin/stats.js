@@ -8,6 +8,16 @@ module.exports = async (req, res) => {
   try {
     const sql = getSql();
     
+    // Helper to safely query tables
+    const safeQuery = async (query, defaultValue = 0) => {
+      try {
+        const result = await query;
+        return Number(result[0]?.count || defaultValue);
+      } catch (err) {
+        return defaultValue;
+      }
+    };
+
     // Get comprehensive stats
     const [
       totalUsers,
@@ -19,55 +29,73 @@ module.exports = async (req, res) => {
       totalNotifications,
       recentUsers
     ] = await Promise.all([
-      sql`SELECT COUNT(*) as count FROM users`,
-      sql`SELECT COUNT(*) as count FROM users WHERE is_active = true`,
-      sql`SELECT COUNT(*) as count FROM posts`,
-      sql`SELECT COUNT(*) as count FROM posts WHERE is_approved = true`,
-      sql`SELECT COUNT(*) as count FROM posts WHERE is_approved = false`,
-      sql`SELECT COUNT(*) as count FROM knowledge_base`,
-      sql`SELECT COUNT(*) as count FROM notifications`,
-      sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`
+      safeQuery(sql`SELECT COUNT(*) as count FROM users`),
+      safeQuery(sql`SELECT COUNT(*) as count FROM users WHERE is_active = true`),
+      safeQuery(sql`SELECT COUNT(*) as count FROM posts`),
+      safeQuery(sql`SELECT COUNT(*) as count FROM posts WHERE is_approved = true`),
+      safeQuery(sql`SELECT COUNT(*) as count FROM posts WHERE is_approved = false`),
+      safeQuery(sql`SELECT COUNT(*) as count FROM knowledge_base`),
+      safeQuery(sql`SELECT COUNT(*) as count FROM notifications`),
+      safeQuery(sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`)
     ]);
 
     // Get posts by type
-    const postsByType = await sql`
-      SELECT type, COUNT(*) as count 
-      FROM posts 
-      WHERE is_approved = true 
-      GROUP BY type
-    `;
+    let postsByType = [];
+    try {
+      const result = await sql`
+        SELECT type, COUNT(*) as count 
+        FROM posts 
+        WHERE is_approved = true 
+        GROUP BY type
+      `;
+      postsByType = result.map(p => ({ type: p.type, count: Number(p.count) }));
+    } catch (err) {
+      // Table might not exist
+    }
 
     // Get users by role
-    const usersByRole = await sql`
-      SELECT role, COUNT(*) as count 
-      FROM users 
-      GROUP BY role
-    `;
+    let usersByRole = [];
+    try {
+      const result = await sql`
+        SELECT role, COUNT(*) as count 
+        FROM users 
+        GROUP BY role
+      `;
+      usersByRole = result.map(u => ({ role: u.role, count: Number(u.count) }));
+    } catch (err) {
+      // Should not happen, but handle gracefully
+    }
 
     // Get knowledge by category
-    const knowledgeByCategory = await sql`
-      SELECT category, COUNT(*) as count 
-      FROM knowledge_base 
-      GROUP BY category
-      ORDER BY count DESC
-      LIMIT 10
-    `;
+    let knowledgeByCategory = [];
+    try {
+      const result = await sql`
+        SELECT category, COUNT(*) as count 
+        FROM knowledge_base 
+        GROUP BY category
+        ORDER BY count DESC
+        LIMIT 10
+      `;
+      knowledgeByCategory = result.map(k => ({ category: k.category, count: Number(k.count) }));
+    } catch (err) {
+      // Table might not exist
+    }
 
     return res.json({
       overview: {
-        totalUsers: Number(totalUsers[0]?.count || 0),
-        activeUsers: Number(activeUsers[0]?.count || 0),
-        totalPosts: Number(totalPosts[0]?.count || 0),
-        approvedPosts: Number(approvedPosts[0]?.count || 0),
-        pendingPosts: Number(pendingPosts[0]?.count || 0),
-        totalKnowledge: Number(totalKnowledge[0]?.count || 0),
-        totalNotifications: Number(totalNotifications[0]?.count || 0),
-        newUsersLast7Days: Number(recentUsers[0]?.count || 0)
+        totalUsers,
+        activeUsers,
+        totalPosts,
+        approvedPosts,
+        pendingPosts,
+        totalKnowledge,
+        totalNotifications,
+        newUsersLast7Days: recentUsers
       },
       breakdown: {
-        postsByType: postsByType.map(p => ({ type: p.type, count: Number(p.count) })),
-        usersByRole: usersByRole.map(u => ({ role: u.role, count: Number(u.count) })),
-        knowledgeByCategory: knowledgeByCategory.map(k => ({ category: k.category, count: Number(k.count) }))
+        postsByType,
+        usersByRole,
+        knowledgeByCategory
       }
     });
   } catch (err) {

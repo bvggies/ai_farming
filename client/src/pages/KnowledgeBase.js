@@ -32,7 +32,7 @@ const KnowledgeBase = ({ user }) => {
 
   const handleEntryClick = async (entryId) => {
     try {
-      const response = await api.get(`/knowledge/${entryId}`);
+      const response = await api.get(`/knowledge?id=${entryId}`);
       setSelectedEntry(response.data);
     } catch (error) {
       console.error('Error fetching entry:', error);
