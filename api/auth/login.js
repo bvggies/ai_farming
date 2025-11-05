@@ -10,17 +10,24 @@ module.exports = async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password) {
-      return res.status(400).json({ message: 'Invalid input' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
     const sql = getSql();
     const rows = await sql`
       SELECT id, name, email, password, farm_size, poultry_type, preferred_language, role, is_active
-      FROM users WHERE email = ${email} LIMIT 1
+      FROM users WHERE email = ${email.toLowerCase().trim()} LIMIT 1
     `;
-    const user = rows[0];
-    if (!user) {
+    
+    if (!rows || rows.length === 0) {
       return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    const user = rows[0];
+    
+    if (!user.password) {
+      console.error('User found but password field is missing');
+      return res.status(500).json({ message: 'Server error: user data issue' });
     }
 
     const ok = await bcrypt.compare(password, user.password);
@@ -39,16 +46,17 @@ module.exports = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        farmSize: user.farm_size,
-        poultryType: user.poultry_type,
-        preferredLanguage: user.preferred_language,
-        role: user.role
+        farmSize: user.farm_size || '',
+        poultryType: user.poultry_type || '',
+        preferredLanguage: user.preferred_language || 'en',
+        role: user.role || 'farmer'
       }
     });
   } catch (err) {
     console.error('Login error:', err);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ 
+      message: 'Server error', 
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined 
+    });
   }
 };
-
-
