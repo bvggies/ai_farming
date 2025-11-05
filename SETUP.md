@@ -92,7 +92,10 @@ npm start
 ## Step 6: Access the Application
 
 - **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:5000
+- **Backend API:**
+  - If using Vercel serverless (this guide): the frontend and API share the same domain. Set:
+    - REACT_APP_API_URL=/api
+  - If running Express locally: http://localhost:5000
 
 ## Step 7: Create Your First Account
 
