@@ -420,3 +420,53 @@
   animation: fadeIn 0.5s;
 }
 
+@media (max-width: 768px) {
+  .admin-panel {
+    padding: 12px;
+  }
+
+  .admin-header h1 {
+    font-size: 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .posts-grid, .knowledge-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .modal-content {
+    padding: 20px;
+    max-width: 95vw;
+  }
+
+  .search-bar {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-tabs button { padding: 10px 12px; font-size: 14px; }
+  .stat-number { font-size: 28px; }
+  .stat-icon { font-size: 36px; padding: 12px; }
+}
+
