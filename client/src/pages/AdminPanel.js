@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FiUsers, FiFileText, FiBook, FiTrendingUp, FiCheckCircle, FiXCircle, 
   FiEdit, FiTrash2, FiPlus, FiBarChart2, FiClock, FiShield, FiSettings,
-  FiSearch, FiFilter, FiRefreshCw, FiEye, FiEyeOff
+  FiSearch, FiFilter, FiRefreshCw, FiEye, FiEyeOff, FiDownload, FiSun, FiMoon
 } from 'react-icons/fi';
 import api from '../services/api';
 import './AdminPanel.css';
@@ -22,6 +22,8 @@ const AdminPanel = ({ user }) => {
   const [formData, setFormData] = useState({});
   const [postForm, setPostForm] = useState({ title: '', content: '', type: 'tip' });
   const [knowledgeFilter, setKnowledgeFilter] = useState('all'); // all | faq | other
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('admin_dark') === '1');
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     fetchStats();
@@ -32,6 +34,18 @@ const AdminPanel = ({ user }) => {
     if (activeTab === 'posts') fetchPosts();
     if (activeTab === 'knowledge') fetchKnowledge();
   }, [activeTab]);
+
+  useEffect(() => {
+    document.body.classList.toggle('admin-dark', darkMode);
+    localStorage.setItem('admin_dark', darkMode ? '1' : '0');
+  }, [darkMode]);
+
+  // Auto refresh stats every 30s
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(fetchStats, 30000);
+    return () => clearInterval(id);
+  }, [autoRefresh]);
 
   const fetchStats = async () => {
     try {
@@ -77,6 +91,13 @@ const AdminPanel = ({ user }) => {
       setLoading(false);
     }
   };
+
+  // Debounced search
+  const [debounced, setDebounced] = useState('');
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(searchTerm), 250);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -183,33 +204,78 @@ const AdminPanel = ({ user }) => {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // CSV export helpers
+  const downloadCSV = (filename, rows) => {
+    const csv = [Object.keys(rows[0] || {}).join(','), ...rows.map(r => Object.values(r).map(v => typeof v === 'string' ? `"${v.replace(/"/g,'""')}"` : v).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-  const filteredPosts = posts.filter(p =>
-    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const exportUsers = () => {
+    const rows = users.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role, active: u.isActive }));
+    if (rows.length === 0) return alert('No users to export');
+    downloadCSV('users.csv', rows);
+  };
 
-  const knowledgeFiltered = knowledge.filter(k => {
-    const matchesSearch = k.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      k.content.toLowerCase().includes(searchTerm.toLowerCase());
+  const exportPosts = () => {
+    const rows = posts.map(p => ({ id: p.id, title: p.title, type: p.type, approved: p.isApproved }));
+    if (rows.length === 0) return alert('No posts to export');
+    downloadCSV('posts.csv', rows);
+  };
+
+  const exportKnowledge = () => {
+    const rows = knowledge.map(k => ({ id: k.id, title: k.title, category: k.category }));
+    if (rows.length === 0) return alert('No entries to export');
+    downloadCSV('knowledge.csv', rows);
+  };
+
+  const filteredUsers = useMemo(() => users.filter(u => 
+    u.name.toLowerCase().includes(debounced.toLowerCase()) ||
+    u.email.toLowerCase().includes(debounced.toLowerCase())
+  ), [users, debounced]);
+
+  const filteredPosts = useMemo(() => posts.filter(p =>
+    p.title.toLowerCase().includes(debounced.toLowerCase()) ||
+    p.content.toLowerCase().includes(debounced.toLowerCase())
+  ), [posts, debounced]);
+
+  const knowledgeFiltered = useMemo(() => knowledge.filter(k => {
+    const matchesSearch = k.title.toLowerCase().includes(debounced.toLowerCase()) ||
+      k.content.toLowerCase().includes(debounced.toLowerCase());
     if (knowledgeFilter === 'faq') return matchesSearch && (k.category || '').toLowerCase() === 'faq';
     if (knowledgeFilter === 'other') return matchesSearch && (k.category || '').toLowerCase() !== 'faq';
     return matchesSearch;
-  });
+  }), [knowledge, debounced, knowledgeFilter]);
+
+  // Recent activity feed from latest items
+  const recentActivity = useMemo(() => {
+    const items = [];
+    users.slice(0, 5).forEach(u => items.push({ type: 'user', date: u.createdAt || '', text: `New user: ${u.name}` }));
+    posts.slice(0, 5).forEach(p => items.push({ type: 'post', date: p.createdAt || '', text: `Post: ${p.title}` }));
+    knowledge.slice(0, 5).forEach(k => items.push({ type: 'kb', date: k.createdAt || '', text: `Knowledge: ${k.title}` }));
+    return items.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+  }, [users, posts, knowledge]);
 
   return (
-    <div className="admin-panel">
+    <div className={`admin-panel${darkMode ? ' admin-panel-dark' : ''}`}>
       <div className="admin-header">
         <h1><FiShield /> Admin Dashboard</h1>
-        <p>Manage your farming community platform</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button className="btn btn-outline" onClick={() => setAutoRefresh(x => !x)} title="Toggle auto-refresh">
+            <FiRefreshCw /> {autoRefresh ? 'Auto' : 'Manual'}
+          </button>
+          <button className="btn btn-outline" onClick={() => setDarkMode(d => !d)} title="Toggle theme">
+            {darkMode ? <FiSun /> : <FiMoon />} {darkMode ? 'Light' : 'Dark'}
+          </button>
+        </div>
       </div>
 
-      {/* Dashboard Overview */}
-      {activeTab === 'dashboard' && stats && (
+      {stats && (
         <div className="dashboard-overview">
           <div className="stats-grid">
             <div className="stat-card stat-primary">
@@ -269,7 +335,10 @@ const AdminPanel = ({ user }) => {
 
           <div className="charts-grid">
             <div className="chart-card">
-              <h3><FiBarChart2 /> Posts by Type</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3><FiBarChart2 /> Posts by Type</h3>
+                <button className="btn btn-outline" onClick={exportPosts}><FiDownload /> Export</button>
+              </div>
               <div className="chart-content">
                 {(stats.breakdown.postsByType || []).map((item, idx) => (
                   <div key={idx} className="chart-item">
@@ -287,7 +356,10 @@ const AdminPanel = ({ user }) => {
             </div>
 
             <div className="chart-card">
-              <h3><FiBarChart2 /> Users by Role</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3><FiBarChart2 /> Users by Role</h3>
+                <button className="btn btn-outline" onClick={exportUsers}><FiDownload /> Export</button>
+              </div>
               <div className="chart-content">
                 {(stats.breakdown.usersByRole || []).map((item, idx) => (
                   <div key={idx} className="chart-item">
@@ -305,7 +377,10 @@ const AdminPanel = ({ user }) => {
             </div>
 
             <div className="chart-card">
-              <h3><FiBarChart2 /> Top Knowledge Categories</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3><FiBarChart2 /> Top Knowledge Categories</h3>
+                <button className="btn btn-outline" onClick={exportKnowledge}><FiDownload /> Export</button>
+              </div>
               <div className="chart-content">
                 {(stats.breakdown.knowledgeByCategory || []).slice(0, 5).map((item, idx) => (
                   <div key={idx} className="chart-item">
@@ -322,10 +397,26 @@ const AdminPanel = ({ user }) => {
               </div>
             </div>
           </div>
+
+          {/* Recent Activity Feed */}
+          <div className="chart-card">
+            <h3><FiClock /> Recent Activity</h3>
+            {recentActivity.length > 0 ? (
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                {recentActivity.map((a, idx) => (
+                  <li key={idx} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <small style={{ color: 'var(--muted)' }}>{new Date(a.date).toLocaleString()}</small>
+                    <div>{a.text}</div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ color: 'var(--muted)' }}>No recent activity</p>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Navigation Tabs */}
       <div className="admin-tabs">
         <button
           className={activeTab === 'dashboard' ? 'tab-active' : ''}
@@ -356,7 +447,6 @@ const AdminPanel = ({ user }) => {
         </button>
       </div>
 
-      {/* Search Bar */}
       {(activeTab !== 'dashboard') && (
         <div className="search-bar">
           <FiSearch />
@@ -369,16 +459,18 @@ const AdminPanel = ({ user }) => {
         </div>
       )}
 
-      {/* Content Sections */}
       {loading && <div className="loading">Loading...</div>}
 
       {activeTab === 'users' && !loading && (
         <div className="content-section">
           <div className="section-header">
             <h2>User Management</h2>
-            <button className="btn btn-primary" onClick={() => { setShowUserModal(true); setFormData({}); setEditingItem(null); }}>
-              <FiPlus /> Add User
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-primary" onClick={() => { setShowUserModal(true); setFormData({}); setEditingItem(null); }}>
+                <FiPlus /> Add User
+              </button>
+              <button className="btn btn-outline" onClick={exportUsers}><FiDownload /> Export</button>
+            </div>
           </div>
 
           <div className="table-container">
@@ -387,8 +479,6 @@ const AdminPanel = ({ user }) => {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Farm Size</th>
-                  <th>Poultry Type</th>
                   <th>Role</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -399,8 +489,6 @@ const AdminPanel = ({ user }) => {
                   <tr key={userItem.id}>
                     <td>{userItem.name}</td>
                     <td>{userItem.email}</td>
-                    <td>{userItem.farmSize || '-'}</td>
-                    <td>{userItem.poultryType || '-'}</td>
                     <td>
                       <span className={`badge badge-${userItem.role === 'admin' ? 'danger' : 'primary'}`}>
                         {userItem.role}
@@ -413,25 +501,13 @@ const AdminPanel = ({ user }) => {
                     </td>
                     <td>
                       <div className="action-buttons">
-                        <button
-                          className="btn-icon"
-                          onClick={() => handleUpdateUser(userItem.id, { isActive: !userItem.isActive })}
-                          title={userItem.isActive ? 'Deactivate' : 'Activate'}
-                        >
+                        <button className="btn-icon" onClick={() => handleUpdateUser(userItem.id, { isActive: !userItem.isActive })} title={userItem.isActive ? 'Deactivate' : 'Activate'}>
                           {userItem.isActive ? <FiEyeOff /> : <FiEye />}
                         </button>
-                        <button
-                          className="btn-icon"
-                          onClick={() => handleUpdateUser(userItem.id, { role: userItem.role === 'admin' ? 'farmer' : 'admin' })}
-                          title="Toggle Role"
-                        >
+                        <button className="btn-icon" onClick={() => handleUpdateUser(userItem.id, { role: userItem.role === 'admin' ? 'farmer' : 'admin' })} title="Toggle Role">
                           <FiShield />
                         </button>
-                        <button
-                          className="btn-icon btn-danger"
-                          onClick={() => handleDeleteUser(userItem.id)}
-                          title="Delete"
-                        >
+                        <button className="btn-icon btn-danger" onClick={() => handleDeleteUser(userItem.id)} title="Delete">
                           <FiTrash2 />
                         </button>
                       </div>
@@ -501,6 +577,7 @@ const AdminPanel = ({ user }) => {
               <button className="btn btn-outline" onClick={() => { setShowKnowledgeModal(true); setFormData({}); setEditingItem(null); }}>
                 <FiPlus /> Add Entry
               </button>
+              <button className="btn btn-outline" onClick={exportKnowledge}><FiDownload /> Export</button>
             </div>
           </div>
 
@@ -527,7 +604,7 @@ const AdminPanel = ({ user }) => {
         </div>
       )}
 
-      {/* User Modal */}
+      {/* Modals */}
       {showUserModal && (
         <div className="modal-overlay" onClick={() => { setShowUserModal(false); setFormData({}); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -581,7 +658,6 @@ const AdminPanel = ({ user }) => {
         </div>
       )}
 
-      {/* Knowledge Modal */}
       {showKnowledgeModal && (
         <div className="modal-overlay" onClick={() => { setShowKnowledgeModal(false); setFormData({}); setEditingItem(null); }}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
@@ -653,7 +729,6 @@ const AdminPanel = ({ user }) => {
         </div>
       )}
 
-      {/* Post Modal */}
       {showPostModal && (
         <div className="modal-overlay" onClick={() => setShowPostModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
