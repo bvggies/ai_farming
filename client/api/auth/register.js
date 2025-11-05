@@ -4,25 +4,25 @@ import { getSql } from '../_db';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.status(405).json({ message: 'Method not allowed' });
-    return;
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const { name, email, password, farmSize = '', poultryType = '', preferredLanguage = 'en' } = req.body || {};
+    
     if (!name || !email || !password || password.length < 6) {
-      res.status(400).json({ message: 'Invalid input' });
-      return;
+      return res.status(400).json({ message: 'Invalid input. Name, email, and password (min 6 chars) are required.' });
     }
 
     const sql = getSql();
 
+    // Check if user exists
     const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
-    if (existing.length) {
-      res.status(400).json({ message: 'User already exists' });
-      return;
+    if (existing && existing.length > 0) {
+      return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Hash password and create user
     const hashed = await bcrypt.hash(password, 10);
     const inserted = await sql`
       INSERT INTO users (name, email, password, farm_size, poultry_type, preferred_language, role, is_active)
@@ -30,24 +30,34 @@ export default async function handler(req, res) {
       RETURNING id, name, email, farm_size, poultry_type, preferred_language, role
     `;
 
-    const user = inserted[0];
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+    if (!inserted || !inserted[0]) {
+      return res.status(500).json({ message: 'Failed to create user' });
+    }
 
-    res.status(201).json({
+    const user = inserted[0];
+    const token = jwt.sign(
+      { userId: user.id }, 
+      process.env.JWT_SECRET || 'fallback_secret', 
+      { expiresIn: '7d' }
+    );
+
+    return res.status(201).json({
       token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        farmSize: user.farm_size,
-        poultryType: user.poultry_type,
-        preferredLanguage: user.preferred_language,
-        role: user.role
+        farmSize: user.farm_size || '',
+        poultryType: user.poultry_type || '',
+        preferredLanguage: user.preferred_language || 'en',
+        role: user.role || 'farmer'
       }
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error('Registration error:', err);
+    return res.status(500).json({ 
+      message: 'Server error', 
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error' 
+    });
   }
 }
-
-
