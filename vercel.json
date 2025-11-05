@@ -3,6 +3,10 @@
   "outputDirectory": "client/build",
   "rewrites": [
     {
+      "source": "/api/posts/:id",
+      "destination": "/api/posts/postById?id=:id"
+    },
+    {
       "source": "/(.*)",
       "destination": "/$1"
     }

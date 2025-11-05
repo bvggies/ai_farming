@@ -17,8 +17,11 @@ const AdminPanel = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUserModal, setShowUserModal] = useState(false);
   const [showKnowledgeModal, setShowKnowledgeModal] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
+  const [postForm, setPostForm] = useState({ title: '', content: '', type: 'tip' });
+  const [knowledgeFilter, setKnowledgeFilter] = useState('all'); // all | faq | other
 
   useEffect(() => {
     fetchStats();
@@ -139,8 +142,8 @@ const AdminPanel = ({ user }) => {
       title: entry.title,
       content: entry.content,
       category: entry.category,
-      tags: entry.tags?.join(', ') || '',
-      keywords: entry.keywords?.join(', ') || '',
+      tags: (entry.tags || []).join(', '),
+      keywords: (entry.keywords || []).join(', '),
       isAIVerified: entry.isAIVerified
     });
     setShowKnowledgeModal(true);
@@ -167,6 +170,19 @@ const AdminPanel = ({ user }) => {
     }
   };
 
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/admin/posts/create', postForm);
+      setShowPostModal(false);
+      setPostForm({ title: '', content: '', type: 'tip' });
+      fetchPosts();
+      fetchStats();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to create post');
+    }
+  };
+
   const filteredUsers = users.filter(u => 
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -177,10 +193,13 @@ const AdminPanel = ({ user }) => {
     p.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredKnowledge = knowledge.filter(k =>
-    k.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    k.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const knowledgeFiltered = knowledge.filter(k => {
+    const matchesSearch = k.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      k.content.toLowerCase().includes(searchTerm.toLowerCase());
+    if (knowledgeFilter === 'faq') return matchesSearch && (k.category || '').toLowerCase() === 'faq';
+    if (knowledgeFilter === 'other') return matchesSearch && (k.category || '').toLowerCase() !== 'faq';
+    return matchesSearch;
+  });
 
   return (
     <div className="admin-panel">
@@ -252,13 +271,13 @@ const AdminPanel = ({ user }) => {
             <div className="chart-card">
               <h3><FiBarChart2 /> Posts by Type</h3>
               <div className="chart-content">
-                {stats.breakdown.postsByType.map((item, idx) => (
+                {(stats.breakdown.postsByType || []).map((item, idx) => (
                   <div key={idx} className="chart-item">
                     <span>{item.type}</span>
                     <div className="chart-bar">
                       <div 
                         className="chart-fill" 
-                        style={{ width: `${(item.count / stats.overview.totalPosts) * 100}%` }}
+                        style={{ width: `${stats.overview.totalPosts ? (item.count / stats.overview.totalPosts) * 100 : 0}%` }}
                       />
                     </div>
                     <span>{item.count}</span>
@@ -270,13 +289,13 @@ const AdminPanel = ({ user }) => {
             <div className="chart-card">
               <h3><FiBarChart2 /> Users by Role</h3>
               <div className="chart-content">
-                {stats.breakdown.usersByRole.map((item, idx) => (
+                {(stats.breakdown.usersByRole || []).map((item, idx) => (
                   <div key={idx} className="chart-item">
                     <span>{item.role}</span>
                     <div className="chart-bar">
                       <div 
                         className="chart-fill" 
-                        style={{ width: `${(item.count / stats.overview.totalUsers) * 100}%` }}
+                        style={{ width: `${stats.overview.totalUsers ? (item.count / stats.overview.totalUsers) * 100 : 0}%` }}
                       />
                     </div>
                     <span>{item.count}</span>
@@ -288,13 +307,13 @@ const AdminPanel = ({ user }) => {
             <div className="chart-card">
               <h3><FiBarChart2 /> Top Knowledge Categories</h3>
               <div className="chart-content">
-                {stats.breakdown.knowledgeByCategory.slice(0, 5).map((item, idx) => (
+                {(stats.breakdown.knowledgeByCategory || []).slice(0, 5).map((item, idx) => (
                   <div key={idx} className="chart-item">
                     <span>{item.category}</span>
                     <div className="chart-bar">
                       <div 
                         className="chart-fill" 
-                        style={{ width: `${(item.count / stats.overview.totalKnowledge) * 100}%` }}
+                        style={{ width: `${stats.overview.totalKnowledge ? (item.count / stats.overview.totalKnowledge) * 100 : 0}%` }}
                       />
                     </div>
                     <span>{item.count}</span>
@@ -429,9 +448,12 @@ const AdminPanel = ({ user }) => {
         <div className="content-section">
           <div className="section-header">
             <h2>Post Management</h2>
-            <div className="filter-buttons">
+            <div className="filter-buttons" style={{ display: 'flex', gap: '10px' }}>
               <button className="btn btn-outline" onClick={() => setSearchTerm('')}>
                 <FiFilter /> Clear Filter
+              </button>
+              <button className="btn btn-primary" onClick={() => setShowPostModal(true)}>
+                <FiPlus /> Add Post
               </button>
             </div>
           </div>
@@ -467,13 +489,23 @@ const AdminPanel = ({ user }) => {
         <div className="content-section">
           <div className="section-header">
             <h2>Knowledge Base Management</h2>
-            <button className="btn btn-primary" onClick={() => { setShowKnowledgeModal(true); setFormData({}); setEditingItem(null); }}>
-              <FiPlus /> Add Entry
-            </button>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <select value={knowledgeFilter} onChange={(e) => setKnowledgeFilter(e.target.value)}>
+                <option value="all">All</option>
+                <option value="faq">FAQs</option>
+                <option value="other">Other</option>
+              </select>
+              <button className="btn btn-primary" onClick={() => { setShowKnowledgeModal(true); setFormData({ category: 'faq' }); setEditingItem(null); }}>
+                <FiPlus /> Add FAQ
+              </button>
+              <button className="btn btn-outline" onClick={() => { setShowKnowledgeModal(true); setFormData({}); setEditingItem(null); }}>
+                <FiPlus /> Add Entry
+              </button>
+            </div>
           </div>
 
           <div className="knowledge-grid">
-            {filteredKnowledge.map(entry => (
+            {knowledgeFiltered.map(entry => (
               <div key={entry.id} className="knowledge-card">
                 <div className="knowledge-header">
                   <h3>{entry.title}</h3>
@@ -553,7 +585,7 @@ const AdminPanel = ({ user }) => {
       {showKnowledgeModal && (
         <div className="modal-overlay" onClick={() => { setShowKnowledgeModal(false); setFormData({}); setEditingItem(null); }}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingItem ? 'Edit Knowledge Entry' : 'Create Knowledge Entry'}</h2>
+            <h2>{editingItem ? 'Edit Knowledge Entry' : (formData.category === 'faq' ? 'Create FAQ' : 'Create Knowledge Entry')}</h2>
             <form onSubmit={handleCreateKnowledge}>
               <div className="form-group">
                 <label>Title *</label>
@@ -580,6 +612,7 @@ const AdminPanel = ({ user }) => {
                   value={formData.category || 'general'}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 />
+                <small style={{ color: '#666' }}>Use 'faq' to add to FAQs section</small>
               </div>
               <div className="form-group">
                 <label>Tags (comma-separated)</label>
@@ -612,6 +645,52 @@ const AdminPanel = ({ user }) => {
               <div className="modal-actions">
                 <button type="submit" className="btn btn-primary">Save</button>
                 <button type="button" className="btn btn-outline" onClick={() => { setShowKnowledgeModal(false); setFormData({}); setEditingItem(null); }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Post Modal */}
+      {showPostModal && (
+        <div className="modal-overlay" onClick={() => setShowPostModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Create Post</h2>
+            <form onSubmit={handleCreatePost}>
+              <div className="form-group">
+                <label>Title *</label>
+                <input
+                  type="text"
+                  value={postForm.title}
+                  onChange={(e) => setPostForm({ ...postForm, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Content *</label>
+                <textarea
+                  value={postForm.content}
+                  onChange={(e) => setPostForm({ ...postForm, content: e.target.value })}
+                  rows="8"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Type</label>
+                <select
+                  value={postForm.type}
+                  onChange={(e) => setPostForm({ ...postForm, type: e.target.value })}
+                >
+                  <option value="tip">Tip</option>
+                  <option value="question">Question</option>
+                  <option value="experience">Experience</option>
+                </select>
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">Create</button>
+                <button type="button" className="btn btn-outline" onClick={() => setShowPostModal(false)}>
                   Cancel
                 </button>
               </div>

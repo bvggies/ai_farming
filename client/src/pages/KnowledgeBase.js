@@ -39,6 +39,9 @@ const KnowledgeBase = ({ user }) => {
     }
   };
 
+  const faqs = entries.filter(e => (e.category || '').toLowerCase() === 'faq');
+  const otherEntries = entries.filter(e => (e.category || '').toLowerCase() !== 'faq');
+
   if (selectedEntry) {
     return (
       <div className="container">
@@ -107,33 +110,58 @@ const KnowledgeBase = ({ user }) => {
           </p>
         </div>
       ) : (
-        <div style={entriesGridStyle}>
-          {entries.map(entry => (
-            <div
-              key={entry._id}
-              className="card"
-              style={entryCardStyle}
-              onClick={() => handleEntryClick(entry._id)}
-            >
-              <div style={entryHeaderStyle}>
-                <FiBookOpen size={24} color="#4CAF50" />
-                <h3 style={entryTitleStyle}>{entry.title}</h3>
-              </div>
-              <p style={entryContentStyle}>
-                {entry.content.substring(0, 150)}...
-              </p>
-              <div style={entryFooterStyle}>
-                {entry.category && <span style={badgeStyle}>{entry.category}</span>}
-                {entry.isAIVerified && (
-                  <span style={{ fontSize: '12px', color: '#2e7d32' }}>✓ Verified</span>
-                )}
-                <span style={{ fontSize: '12px', color: '#666' }}>
-                  {entry.views || 0} views
-                </span>
+        <>
+          {faqs.length > 0 && (
+            <div className="card" style={{ marginBottom: '20px' }}>
+              <h2 style={{ marginTop: 0 }}>Frequently Asked Questions</h2>
+              <div>
+                {faqs.map(entry => (
+                  <div key={entry._id} style={{ padding: '12px 0', borderBottom: '1px solid #eee' }}>
+                    <div 
+                      style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
+                      onClick={() => handleEntryClick(entry._id)}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <FiBookOpen size={20} color="#4CAF50" />
+                        <strong>{entry.title}</strong>
+                      </div>
+                      <span style={{ fontSize: '12px', color: '#666' }}>{entry.views || 0} views</span>
+                    </div>
+                    <p style={{ color: '#666', margin: '8px 0 0' }}>{entry.content.substring(0, 140)}...</p>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          )}
+
+          <div style={entriesGridStyle}>
+            {otherEntries.map(entry => (
+              <div
+                key={entry._id}
+                className="card"
+                style={entryCardStyle}
+                onClick={() => handleEntryClick(entry._id)}
+              >
+                <div style={entryHeaderStyle}>
+                  <FiBookOpen size={24} color="#4CAF50" />
+                  <h3 style={entryTitleStyle}>{entry.title}</h3>
+                </div>
+                <p style={entryContentStyle}>
+                  {entry.content.substring(0, 150)}...
+                </p>
+                <div style={entryFooterStyle}>
+                  {entry.category && <span style={badgeStyle}>{entry.category}</span>}
+                  {entry.isAIVerified && (
+                    <span style={{ fontSize: '12px', color: '#2e7d32' }}>✓ Verified</span>
+                  )}
+                  <span style={{ fontSize: '12px', color: '#666' }}>
+                    {entry.views || 0} views
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

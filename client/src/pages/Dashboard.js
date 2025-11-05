@@ -22,6 +22,12 @@ const Dashboard = ({ user }) => {
     reminderTime: '08:00'
   });
 
+  const [activeTab, setActiveTab] = useState('overview'); // overview | activity
+  const [feedingSchedules, setFeedingSchedules] = useState([]);
+  const [farmLogs, setFarmLogs] = useState([]);
+  const [feedingForm, setFeedingForm] = useState({ timeOfDay: '08:00', feedType: '', rationGrams: 0, notes: '' });
+  const [farmForm, setFarmForm] = useState({ logDate: '', numBirds: '', feedType: '', dailyFeedKg: '', mortality: '', notes: '' });
+
   useEffect(() => {
     fetchDashboardData();
     const interval = setInterval(fetchDashboardData, 60000); // Refresh every minute
@@ -31,13 +37,16 @@ const Dashboard = ({ user }) => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [postsRes, remindersRes] = await Promise.all([
+      const [postsRes, remindersRes, activityRes] = await Promise.all([
         api.get('/posts?limit=5').catch(() => ({ data: [] })),
-        api.get('/reminders').catch(() => ({ data: [] }))
+        api.get('/reminders').catch(() => ({ data: [] })),
+        api.get('/activity').catch(() => ({ data: { feedingSchedules: [], farmLogs: [], aggregates: {} } }))
       ]);
       
       setRecentPosts(postsRes.data);
       setReminders(remindersRes.data || []);
+      setFeedingSchedules(activityRes.data.feedingSchedules || []);
+      setFarmLogs(activityRes.data.farmLogs || []);
       
       // Calculate stats
       const today = new Date();
@@ -126,6 +135,28 @@ const Dashboard = ({ user }) => {
     return diff;
   };
 
+  const handleAddFeedingSchedule = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/activity', { kind: 'feeding', ...feedingForm });
+      setFeedingForm({ timeOfDay: '08:00', feedType: '', rationGrams: 0, notes: '' });
+      fetchDashboardData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to add feeding schedule');
+    }
+  };
+
+  const handleAddFarmLog = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/activity', { kind: 'farm', ...farmForm });
+      setFarmForm({ logDate: '', numBirds: '', feedType: '', dailyFeedKg: '', mortality: '', notes: '' });
+      fetchDashboardData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save farm data');
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -140,175 +171,297 @@ const Dashboard = ({ user }) => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card stat-blue">
-          <div className="stat-icon"><FiMessageSquare /></div>
-          <div className="stat-info">
-            <h3>Recent Posts</h3>
-            <p className="stat-value">{stats?.totalPosts || 0}</p>
-          </div>
-        </div>
-
-        <div className="stat-card stat-orange">
-          <div className="stat-icon"><FiBell /></div>
-          <div className="stat-info">
-            <h3>Upcoming</h3>
-            <p className="stat-value">{stats?.upcomingReminders || 0}</p>
-            <small>Reminders</small>
-          </div>
-        </div>
-
-        <div className="stat-card stat-green">
-          <div className="stat-icon"><FiCheckCircle /></div>
-          <div className="stat-info">
-            <h3>Completed</h3>
-            <p className="stat-value">{stats?.completedReminders || 0}</p>
-            <small>Tasks</small>
-          </div>
-        </div>
-
-        <div className="stat-card stat-purple">
-          <div className="stat-icon"><FiActivity /></div>
-          <div className="stat-info">
-            <h3>Activity</h3>
-            <p className="stat-value">Active</p>
-            <small>This week</small>
-          </div>
-        </div>
+      <div className="admin-tabs" style={{ marginBottom: 20 }}>
+        <button className={activeTab === 'overview' ? 'tab-active' : ''} onClick={() => setActiveTab('overview')}>
+          <FiTrendingUp /> Overview
+        </button>
+        <button className={activeTab === 'activity' ? 'tab-active' : ''} onClick={() => setActiveTab('activity')}>
+          <FiActivity /> Activity
+        </button>
       </div>
 
-      <div className="dashboard-grid">
-        {/* Quick Actions */}
-        <div className="dashboard-card">
-          <h2><FiSettings /> Quick Actions</h2>
-          <div className="quick-actions">
-            <Link to="/create-post" className="action-item">
-              <FiMessageSquare size={24} />
-              <span>Share Experience</span>
-            </Link>
-            <Link to="/ai-chat" className="action-item">
-              <FiSettings size={24} />
-              <span>AI Assistant</span>
-            </Link>
-            <Link to="/knowledge" className="action-item">
-              <FiBook size={24} />
-              <span>Knowledge Base</span>
-            </Link>
-            <Link to="/profile" className="action-item">
-              <FiActivity size={24} />
-              <span>My Profile</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Upcoming Reminders */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h2><FiCalendar /> Upcoming Reminders</h2>
-            <button className="btn-icon" onClick={() => setShowReminderModal(true)}>
-              <FiPlus />
-            </button>
-          </div>
-          {getUpcomingReminders().length > 0 ? (
-            <div className="reminders-list">
-              {getUpcomingReminders().map(reminder => {
-                const daysUntil = getDaysUntil(reminder.reminderDate);
-                return (
-                  <div key={reminder.id} className="reminder-item">
-                    <div className="reminder-icon">{getReminderTypeIcon(reminder.type)}</div>
-                    <div className="reminder-content">
-                      <h4>{reminder.title}</h4>
-                      <p>{reminder.description}</p>
-                      <small>
-                        <FiClock /> {new Date(reminder.reminderDate).toLocaleDateString()} at {reminder.reminderTime}
-                        {daysUntil === 0 && <span className="urgent"> • Today!</span>}
-                        {daysUntil === 1 && <span className="soon"> • Tomorrow</span>}
-                        {daysUntil > 1 && <span> • In {daysUntil} days</span>}
-                      </small>
-                    </div>
-                    <div className="reminder-actions">
-                      <button 
-                        className="btn-icon btn-success" 
-                        onClick={() => handleCompleteReminder(reminder.id)}
-                        title="Mark Complete"
-                      >
-                        <FiCheckCircle />
-                      </button>
-                      <button 
-                        className="btn-icon btn-danger" 
-                        onClick={() => handleDeleteReminder(reminder.id)}
-                        title="Delete"
-                      >
-                        <FiX />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+      {activeTab === 'overview' && (
+        <>
+          {/* Stats Cards */}
+          <div className="stats-grid">
+            <div className="stat-card stat-blue">
+              <div className="stat-icon"><FiMessageSquare /></div>
+              <div className="stat-info">
+                <h3>Recent Posts</h3>
+                <p className="stat-value">{stats?.totalPosts || 0}</p>
+              </div>
             </div>
-          ) : (
-            <div className="empty-state">
-              <FiBell size={48} color="#ccc" />
-              <p>No upcoming reminders</p>
-              <button className="btn btn-outline" onClick={() => setShowReminderModal(true)}>
-                Create Reminder
-              </button>
-            </div>
-          )}
-        </div>
 
-        {/* Recent Posts */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h2><FiTrendingUp /> Recent Community Posts</h2>
-            <Link to="/posts" className="btn-link">View All</Link>
+            <div className="stat-card stat-orange">
+              <div className="stat-icon"><FiBell /></div>
+              <div className="stat-info">
+                <h3>Upcoming</h3>
+                <p className="stat-value">{stats?.upcomingReminders || 0}</p>
+                <small>Reminders</small>
+              </div>
+            </div>
+
+            <div className="stat-card stat-green">
+              <div className="stat-icon"><FiCheckCircle /></div>
+              <div className="stat-info">
+                <h3>Completed</h3>
+                <p className="stat-value">{stats?.completedReminders || 0}</p>
+                <small>Tasks</small>
+              </div>
+            </div>
+
+            <div className="stat-card stat-purple">
+              <div className="stat-icon"><FiActivity /></div>
+              <div className="stat-info">
+                <h3>Activity</h3>
+                <p className="stat-value">Active</p>
+                <small>This week</small>
+              </div>
+            </div>
           </div>
-          {recentPosts.length > 0 ? (
-            <div className="posts-list">
-              {recentPosts.map(post => (
-                <div key={post.id || post._id} className="post-item">
-                  <h4>{post.title}</h4>
-                  <p className="post-meta">
-                    By {post.author?.name || 'Unknown'} • {new Date(post.createdAt).toLocaleDateString()}
-                  </p>
-                  <p className="post-excerpt">{post.content.substring(0, 100)}...</p>
-                  <Link to={`/posts/${post.id || post._id}`} className="post-link">
-                    Read more <FiArrowRight />
-                  </Link>
+
+          <div className="dashboard-grid">
+            {/* Quick Actions */}
+            <div className="dashboard-card">
+              <h2><FiSettings /> Quick Actions</h2>
+              <div className="quick-actions">
+                <Link to="/create-post" className="action-item">
+                  <FiMessageSquare size={24} />
+                  <span>Share Experience</span>
+                </Link>
+                <Link to="/ai-chat" className="action-item">
+                  <FiSettings size={24} />
+                  <span>AI Assistant</span>
+                </Link>
+                <Link to="/knowledge" className="action-item">
+                  <FiBook size={24} />
+                  <span>Knowledge Base</span>
+                </Link>
+                <Link to="/profile" className="action-item">
+                  <FiActivity size={24} />
+                  <span>My Profile</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Upcoming Reminders */}
+            <div className="dashboard-card">
+              <div className="card-header">
+                <h2><FiCalendar /> Upcoming Reminders</h2>
+                <button className="btn-icon" onClick={() => setShowReminderModal(true)}>
+                  <FiPlus />
+                </button>
+              </div>
+              {getUpcomingReminders().length > 0 ? (
+                <div className="reminders-list">
+                  {getUpcomingReminders().map(reminder => {
+                    const daysUntil = getDaysUntil(reminder.reminderDate);
+                    return (
+                      <div key={reminder.id} className="reminder-item">
+                        <div className="reminder-icon">{getReminderTypeIcon(reminder.type)}</div>
+                        <div className="reminder-content">
+                          <h4>{reminder.title}</h4>
+                          <p>{reminder.description}</p>
+                          <small>
+                            <FiClock /> {new Date(reminder.reminderDate).toLocaleDateString()} at {reminder.reminderTime}
+                            {daysUntil === 0 && <span className="urgent"> • Today!</span>}
+                            {daysUntil === 1 && <span className="soon"> • Tomorrow</span>}
+                            {daysUntil > 1 && <span> • In {daysUntil} days</span>}
+                          </small>
+                        </div>
+                        <div className="reminder-actions">
+                          <button 
+                            className="btn-icon btn-success" 
+                            onClick={() => handleCompleteReminder(reminder.id)}
+                            title="Mark Complete"
+                          >
+                            <FiCheckCircle />
+                          </button>
+                          <button 
+                            className="btn-icon btn-danger" 
+                            onClick={() => handleDeleteReminder(reminder.id)}
+                            title="Delete"
+                          >
+                            <FiX />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              ) : (
+                <div className="empty-state">
+                  <FiBell size={48} color="#ccc" />
+                  <p>No upcoming reminders</p>
+                  <button className="btn btn-outline" onClick={() => setShowReminderModal(true)}>
+                    Create Reminder
+                  </button>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="empty-state">
-              <p>No posts yet. Be the first to share!</p>
-              <Link to="/create-post" className="btn btn-primary">Create Post</Link>
-            </div>
-          )}
-        </div>
 
-        {/* Profile Summary */}
-        <div className="dashboard-card">
-          <h2><FiActivity /> Your Profile</h2>
-          <div className="profile-summary">
-            <div className="profile-item">
-              <strong>Farm Size:</strong>
-              <span>{user.farmSize || 'Not specified'}</span>
+            {/* Recent Posts */}
+            <div className="dashboard-card">
+              <div className="card-header">
+                <h2><FiTrendingUp /> Recent Community Posts</h2>
+                <Link to="/posts" className="btn-link">View All</Link>
+              </div>
+              {recentPosts.length > 0 ? (
+                <div className="posts-list">
+                  {recentPosts.map(post => (
+                    <div key={post.id || post._id} className="post-item">
+                      <h4>{post.title}</h4>
+                      <p className="post-meta">
+                        By {post.author?.name || 'Unknown'} • {new Date(post.createdAt).toLocaleDateString()}
+                      </p>
+                      <p className="post-excerpt">{post.content.substring(0, 100)}...</p>
+                      <Link to={`/posts/${post.id || post._id}`} className="post-link">
+                        Read more <FiArrowRight />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <p>No posts yet. Be the first to share!</p>
+                  <Link to="/create-post" className="btn btn-primary">Create Post</Link>
+                </div>
+              )}
             </div>
-            <div className="profile-item">
-              <strong>Poultry Type:</strong>
-              <span>{user.poultryType || 'Not specified'}</span>
+
+            {/* Profile Summary */}
+            <div className="dashboard-card">
+              <h2><FiActivity /> Your Profile</h2>
+              <div className="profile-summary">
+                <div className="profile-item">
+                  <strong>Farm Size:</strong>
+                  <span>{user.farmSize || 'Not specified'}</span>
+                </div>
+                <div className="profile-item">
+                  <strong>Poultry Type:</strong>
+                  <span>{user.poultryType || 'Not specified'}</span>
+                </div>
+                <div className="profile-item">
+                  <strong>Language:</strong>
+                  <span>{user.preferredLanguage || 'English'}</span>
+                </div>
+                <Link to="/profile" className="btn btn-outline" style={{ marginTop: '15px' }}>
+                  Update Profile
+                </Link>
+              </div>
             </div>
-            <div className="profile-item">
-              <strong>Language:</strong>
-              <span>{user.preferredLanguage || 'English'}</span>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'activity' && (
+        <div className="dashboard-grid">
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2><FiClock /> Feeding Schedules</h2>
             </div>
-            <Link to="/profile" className="btn btn-outline" style={{ marginTop: '15px' }}>
-              Update Profile
-            </Link>
+            <form onSubmit={handleAddFeedingSchedule} style={{ marginBottom: 20 }}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Time of Day *</label>
+                  <input type="time" value={feedingForm.timeOfDay} onChange={(e) => setFeedingForm({ ...feedingForm, timeOfDay: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label>Feed Type</label>
+                  <input type="text" value={feedingForm.feedType} onChange={(e) => setFeedingForm({ ...feedingForm, feedType: e.target.value })} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Ration (grams per bird)</label>
+                  <input type="number" min="0" value={feedingForm.rationGrams} onChange={(e) => setFeedingForm({ ...feedingForm, rationGrams: Number(e.target.value) })} />
+                </div>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <input type="text" value={feedingForm.notes} onChange={(e) => setFeedingForm({ ...feedingForm, notes: e.target.value })} />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">Add Schedule</button>
+              </div>
+            </form>
+
+            {feedingSchedules.length > 0 ? (
+              <div className="posts-list">
+                {feedingSchedules.map(s => (
+                  <div key={s.id} className="post-item">
+                    <h4>{String(s.timeOfDay).slice(0,5)} • {s.feedType || 'Feed'}</h4>
+                    <p className="post-meta">Ration: {s.rationGrams || 0} g/bird</p>
+                    {s.notes && <p className="post-excerpt">{s.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>No feeding schedules yet.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2><FiBarChart2 /> Farm Data</h2>
+            </div>
+            <form onSubmit={handleAddFarmLog} style={{ marginBottom: 20 }}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Date</label>
+                  <input type="date" value={farmForm.logDate} onChange={(e) => setFarmForm({ ...farmForm, logDate: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Number of Birds</label>
+                  <input type="number" min="0" value={farmForm.numBirds} onChange={(e) => setFarmForm({ ...farmForm, numBirds: Number(e.target.value) })} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Feed Type</label>
+                  <input type="text" value={farmForm.feedType} onChange={(e) => setFarmForm({ ...farmForm, feedType: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Daily Feed (kg)</label>
+                  <input type="number" min="0" step="0.01" value={farmForm.dailyFeedKg} onChange={(e) => setFarmForm({ ...farmForm, dailyFeedKg: Number(e.target.value) })} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Mortality</label>
+                  <input type="number" min="0" value={farmForm.mortality} onChange={(e) => setFarmForm({ ...farmForm, mortality: Number(e.target.value) })} />
+                </div>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <input type="text" value={farmForm.notes} onChange={(e) => setFarmForm({ ...farmForm, notes: e.target.value })} />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">Save</button>
+              </div>
+            </form>
+
+            {farmLogs.length > 0 ? (
+              <div className="posts-list">
+                {farmLogs.map(l => (
+                  <div key={l.id} className="post-item">
+                    <h4>{new Date(l.logDate).toLocaleDateString()} • Birds: {l.numBirds || 0}</h4>
+                    <p className="post-meta">Feed: {l.feedType || '-'} • {l.dailyFeedKg || 0} kg</p>
+                    <p className="post-excerpt">Mortality: {l.mortality || 0}</p>
+                    {l.notes && <p className="post-excerpt">{l.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>No farm data yet.</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Reminder Modal */}
       {showReminderModal && (
