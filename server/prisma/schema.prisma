@@ -1,0 +1,118 @@
+// Prisma schema for Neon Postgres
+// Run: npx prisma generate && npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  name               String
+  email              String   @unique
+  password           String
+  farmSize           String?  @default("")
+  poultryType        String?  @default("")
+  preferredLanguage  String   @default("en")
+  role               Role     @default(farmer)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+
+  posts     Post[]
+  comments  PostComment[]
+  likes     PostLike[]
+  createdKB KnowledgeBase[]  @relation("CreatedBy")
+  notifications Notification[]
+}
+
+model Post {
+  id         String       @id @default(cuid())
+  authorId   String
+  author     User         @relation(fields: [authorId], references: [id])
+  title      String
+  content    String
+  type       PostType     @default(question)
+  isApproved Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+
+  images   PostImage[]
+  likes    PostLike[]
+  comments PostComment[]
+}
+
+model PostImage {
+  id      String @id @default(cuid())
+  url     String
+  postId  String
+  post    Post   @relation(fields: [postId], references: [id])
+}
+
+model PostLike {
+  postId String
+  userId String
+  post   Post   @relation(fields: [postId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([postId, userId])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model KnowledgeBase {
+  id            String    @id @default(cuid())
+  title         String
+  content       String
+  category      String    @default("general")
+  tags          String[]
+  keywords      String[]
+  isAIVerified  Boolean   @default(false)
+  createdById   String?
+  createdBy     User?     @relation("CreatedBy", fields: [createdById], references: [id])
+  views         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      NotificationType
+  title     String
+  message   String
+  link      String   @default("")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  farmer
+  admin
+}
+
+enum PostType {
+  question
+  tip
+  experience
+}
+
+enum NotificationType {
+  post_response
+  comment
+  ai_suggestion
+  reminder
+}
+
+
