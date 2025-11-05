@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiMessageSquare, FiBook, FiUser, FiSettings, FiBell } from 'react-icons/fi';
+import { FiHome, FiMessageSquare, FiBook, FiUser, FiSettings } from 'react-icons/fi';
 import api from '../services/api';
 
 const Navbar = ({ user, onLogout }) => {
   const location = useLocation();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {

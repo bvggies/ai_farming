@@ -10,11 +10,7 @@ const PostDetail = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchPost();
-  }, [id]);
-
-  const fetchPost = async () => {
+  const fetchPost = React.useCallback(async () => {
     try {
       const response = await api.get(`/posts/${id}`);
       setPost(response.data);
@@ -23,7 +19,11 @@ const PostDetail = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchPost();
+  }, [fetchPost]);
 
   const handleLike = async () => {
     try {
@@ -83,7 +83,7 @@ const PostDetail = ({ user }) => {
               <img
                 key={idx}
                 src={`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${img}`}
-                alt={`Post image ${idx + 1}`}
+                alt={`Post ${idx + 1}`}
                 style={imageStyle}
               />
             ))}

@@ -8,11 +8,7 @@ const Posts = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  useEffect(() => {
-    fetchPosts();
-  }, [filter]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get('/posts');
@@ -28,7 +24,11 @@ const Posts = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   const handleLike = async (postId) => {
     try {
@@ -107,7 +107,7 @@ const Posts = ({ user }) => {
                   <img
                     key={idx}
                     src={`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${img}`}
-                    alt={`Post image ${idx + 1}`}
+                    alt={`Post ${idx + 1}`}
                     style={imageStyle}
                   />
                 ))}

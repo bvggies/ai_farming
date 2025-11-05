@@ -4,7 +4,6 @@ import { FiMessageSquare, FiBook, FiSettings, FiArrowRight } from 'react-icons/f
 import api from '../services/api';
 
 const Dashboard = ({ user }) => {
-  const [stats, setStats] = useState({ posts: 0, knowledge: 0 });
   const [recentPosts, setRecentPosts] = useState([]);
 
   useEffect(() => {
@@ -15,7 +14,6 @@ const Dashboard = ({ user }) => {
           api.get('/knowledge?limit=5')
         ]);
         setRecentPosts(postsRes.data);
-        setStats({ posts: postsRes.data.length, knowledge: knowledgeRes.data.length });
       } catch (error) {
         console.error('Error fetching data:', error);
       }
