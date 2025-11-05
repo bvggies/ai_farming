@@ -337,111 +337,6 @@ const Dashboard = ({ user }) => {
 
       {activeTab === 'activity' && (
         <div className="dashboard-grid">
-          {/* Analytics */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2><FiBarChart2 /> Activity Analytics (7 days)</h2>
-            </div>
-            {activityAnalytics ? (
-              <>
-                <div className="stats-grid">
-                  <div className="stat-card stat-blue">
-                    <div className="stat-icon"><FiBarChart2 /></div>
-                    <div className="stat-info">
-                      <h3>Total Feed (kg)</h3>
-                      <p className="stat-value">{activityAnalytics.totalFeedKg7d}</p>
-                    </div>
-                  </div>
-                  <div className="stat-card stat-green">
-                    <div className="stat-icon"><FiActivity /></div>
-                    <div className="stat-info">
-                      <h3>Avg Feed/Day (kg)</h3>
-                      <p className="stat-value">{activityAnalytics.avgFeedKg7d}</p>
-                    </div>
-                  </div>
-                  <div className="stat-card stat-purple">
-                    <div className="stat-icon"><FiActivity /></div>
-                    <div className="stat-info">
-                      <h3>Feed/Bird/Day (kg)</h3>
-                      <p className="stat-value">{activityAnalytics.feedPerBirdAvg}</p>
-                    </div>
-                  </div>
-                  <div className="stat-card stat-orange">
-                    <div className="stat-icon"><FiActivity /></div>
-                    <div className="stat-info">
-                      <h3>Mortality (7d)</h3>
-                      <p className="stat-value">{activityAnalytics.totalMortality7d}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="dashboard-card" style={{ padding: 0 }}>
-                  <div style={{ padding: 20 }}>
-                    <h3 style={{ marginTop: 0 }}>Feed (kg) by Day</h3>
-                    {activityAnalytics.days && activityAnalytics.days.length > 0 ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
-                        {activityAnalytics.days.map((d, idx) => (
-                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                            <div style={{ height: 80, width: '100%', background: '#f0f0f0', borderRadius: 6, display: 'flex', alignItems: 'flex-end' }}>
-                              <div style={{ width: '100%', height: `${maxFeed ? (d.feedKg / maxFeed) * 100 : 0}%`, background: 'linear-gradient(90deg, #4CAF50, #45a049)', borderRadius: 6 }} />
-                            </div>
-                            <small style={{ color: '#666' }}>{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })}</small>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p style={{ color: '#666' }}>No data</p>
-                    )}
-                  </div>
-
-                  <div style={{ padding: 20 }}>
-                    <h3 style={{ marginTop: 0 }}>Mortality by Day</h3>
-                    {activityAnalytics.days && activityAnalytics.days.length > 0 ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
-                        {activityAnalytics.days.map((d, idx) => (
-                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                            <div style={{ height: 80, width: '100%', background: '#f0f0f0', borderRadius: 6, display: 'flex', alignItems: 'flex-end' }}>
-                              <div style={{ width: '100%', height: `${maxMort ? (d.mortality / maxMort) * 100 : 0}%`, background: 'linear-gradient(90deg, #ff9800, #fb8c00)', borderRadius: 6 }} />
-                            </div>
-                            <small style={{ color: '#666' }}>{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })}</small>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p style={{ color: '#666' }}>No data</p>
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="empty-state">
-                <p>No analytics yet. Add farm data to see insights.</p>
-              </div>
-            )}
-          </div>
-
-          {/* History */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2><FiActivity /> Activity History</h2>
-            </div>
-            {activityHistory && activityHistory.length > 0 ? (
-              <div className="posts-list">
-                {activityHistory.map(ev => (
-                  <div key={ev.id} className="post-item">
-                    <h4>{ev.title}</h4>
-                    <p className="post-meta">{new Date(ev.date).toLocaleDateString()}</p>
-                    <p className="post-excerpt">{ev.details}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <p>No activity yet. Add farm data to see history.</p>
-              </div>
-            )}
-          </div>
-
           {/* Feeding Schedules */}
           <div className="dashboard-card">
             <div className="card-header">
@@ -545,6 +440,111 @@ const Dashboard = ({ user }) => {
             ) : (
               <div className="empty-state">
                 <p>No farm data yet.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Analytics */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2><FiBarChart2 /> Activity Analytics (7 days)</h2>
+            </div>
+            {activityAnalytics ? (
+              <>
+                <div className="stats-grid">
+                  <div className="stat-card stat-blue">
+                    <div className="stat-icon"><FiBarChart2 /></div>
+                    <div className="stat-info">
+                      <h3>Total Feed (kg)</h3>
+                      <p className="stat-value">{activityAnalytics.totalFeedKg7d}</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-green">
+                    <div className="stat-icon"><FiActivity /></div>
+                    <div className="stat-info">
+                      <h3>Avg Feed/Day (kg)</h3>
+                      <p className="stat-value">{activityAnalytics.avgFeedKg7d}</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-purple">
+                    <div className="stat-icon"><FiActivity /></div>
+                    <div className="stat-info">
+                      <h3>Feed/Bird/Day (kg)</h3>
+                      <p className="stat-value">{activityAnalytics.feedPerBirdAvg}</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-orange">
+                    <div className="stat-icon"><FiActivity /></div>
+                    <div className="stat-info">
+                      <h3>Mortality (7d)</h3>
+                      <p className="stat-value">{activityAnalytics.totalMortality7d}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="dashboard-card" style={{ padding: 0 }}>
+                  <div style={{ padding: 20 }}>
+                    <h3 style={{ marginTop: 0 }}>Feed (kg) by Day</h3>
+                    {activityAnalytics.days && activityAnalytics.days.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
+                        {activityAnalytics.days.map((d, idx) => (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                            <div style={{ height: 80, width: '100%', background: '#f0f0f0', borderRadius: 6, display: 'flex', alignItems: 'flex-end' }}>
+                              <div style={{ width: '100%', height: `${maxFeed ? (d.feedKg / maxFeed) * 100 : 0}%`, background: 'linear-gradient(90deg, #4CAF50, #45a049)', borderRadius: 6 }} />
+                            </div>
+                            <small style={{ color: '#666' }}>{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })}</small>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: '#666' }}>No data</p>
+                    )}
+                  </div>
+
+                  <div style={{ padding: 20 }}>
+                    <h3 style={{ marginTop: 0 }}>Mortality by Day</h3>
+                    {activityAnalytics.days && activityAnalytics.days.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
+                        {activityAnalytics.days.map((d, idx) => (
+                          <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                            <div style={{ height: 80, width: '100%', background: '#f0f0f0', borderRadius: 6, display: 'flex', alignItems: 'flex-end' }}>
+                              <div style={{ width: '100%', height: `${maxMort ? (d.mortality / maxMort) * 100 : 0}%`, background: 'linear-gradient(90deg, #ff9800, #fb8c00)', borderRadius: 6 }} />
+                            </div>
+                            <small style={{ color: '#666' }}>{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })}</small>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: '#666' }}>No data</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="empty-state">
+                <p>No analytics yet. Add farm data to see insights.</p>
+              </div>
+            )}
+          </div>
+
+          {/* History */}
+          <div className="dashboard-card">
+            <div className="card-header">
+              <h2><FiActivity /> Activity History</h2>
+            </div>
+            {activityHistory && activityHistory.length > 0 ? (
+              <div className="posts-list">
+                {activityHistory.map(ev => (
+                  <div key={ev.id} className="post-item">
+                    <h4>{ev.title}</h4>
+                    <p className="post-meta">{new Date(ev.date).toLocaleDateString()}</p>
+                    <p className="post-excerpt">{ev.details}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>No activity yet. Add farm data to see history.</p>
               </div>
             )}
           </div>
