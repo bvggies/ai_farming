@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiSend, FiMessageCircle, FiMic, FiSquare } from 'react-icons/fi';
+import { FiSend, FiMessageCircle, FiMic, FiSquare, FiVolume2, FiVolumeX } from 'react-icons/fi';
 import api from '../services/api';
 
 const AIChat = ({ user }) => {
@@ -7,9 +7,11 @@ const AIChat = ({ user }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [playingIndex, setPlayingIndex] = useState(null);
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const messagesEndRef = useRef(null);
+  const speechSynthRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -18,6 +20,15 @@ const AIChat = ({ user }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Cleanup speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (speechSynthRef.current) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -132,6 +143,52 @@ const AIChat = ({ user }) => {
     reader.readAsDataURL(blob);
   });
 
+  const playAudio = (text, index) => {
+    // Stop any currently playing audio
+    if (speechSynthRef.current) {
+      window.speechSynthesis.cancel();
+    }
+
+    if (playingIndex === index) {
+      // If clicking the same message, stop playback
+      setPlayingIndex(null);
+      return;
+    }
+
+    // Get user's preferred language for TTS
+    const userLang = user?.preferredLanguage || 'en';
+    const langCode = userLang === 'tw' ? 'ak-GH' : 'en-US'; // Twi uses Akan-Ghana locale
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langCode;
+    utterance.rate = 0.9; // Slightly slower for clarity
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onend = () => {
+      setPlayingIndex(null);
+      speechSynthRef.current = null;
+    };
+
+    utterance.onerror = (error) => {
+      console.error('Speech synthesis error:', error);
+      setPlayingIndex(null);
+      speechSynthRef.current = null;
+    };
+
+    speechSynthRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+    setPlayingIndex(index);
+  };
+
+  const stopAudio = () => {
+    if (speechSynthRef.current) {
+      window.speechSynthesis.cancel();
+      speechSynthRef.current = null;
+      setPlayingIndex(null);
+    }
+  };
+
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   return (
@@ -168,7 +225,20 @@ const AIChat = ({ user }) => {
               }}
             >
               <div style={messageContentStyle}>
-                <strong>{msg.role === 'user' ? 'You' : 'AI Assistant'}:</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <strong>{msg.role === 'user' ? 'You' : 'AI Assistant'}:</strong>
+                  {msg.role === 'assistant' && (
+                    <button
+                      onClick={() => playAudio(msg.content, idx)}
+                      onMouseEnter={(e) => e.target.style.opacity = '1'}
+                      onMouseLeave={(e) => e.target.style.opacity = '0.8'}
+                      style={audioButtonStyle}
+                      title={playingIndex === idx ? 'Stop playback' : 'Play audio'}
+                    >
+                      {playingIndex === idx ? <FiVolumeX /> : <FiVolume2 />}
+                    </button>
+                  )}
+                </div>
                 <p style={{ marginTop: '8px', whiteSpace: 'pre-wrap' }}>{msg.content}</p>
               </div>
             </div>
@@ -307,6 +377,28 @@ const buttonMobileStyle = {
   justifyContent: 'center',
   gap: '6px',
   fontSize: '14px'
+};
+
+const audioButtonStyle = {
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  color: '#4CAF50',
+  fontSize: '18px',
+  padding: '4px 8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '4px',
+  transition: 'all 0.2s',
+  opacity: 0.8
+};
+
+// Add hover effect via inline style with onMouseEnter/onMouseLeave
+const audioButtonHoverStyle = {
+  ...audioButtonStyle,
+  opacity: 1,
+  backgroundColor: 'rgba(76, 175, 80, 0.1)'
 };
 
 export default AIChat;
