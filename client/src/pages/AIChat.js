@@ -113,15 +113,17 @@ const AIChat = ({ user }) => {
     reader.readAsDataURL(blob);
   });
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
   return (
-    <div className="container">
+    <div className="container" style={{ paddingBottom: isMobile ? '90px' : '24px' }}>
       <h1>AI Farming Assistant</h1>
       <p style={{ color: '#666', marginBottom: '20px' }}>
         Ask me anything about poultry farming - health, feeding, housing, management, and more!
       </p>
 
-      <div className="card" style={chatContainerStyle}>
-        <div style={messagesContainerStyle}>
+      <div className="card" style={{ ...chatContainerStyle, ...(isMobile ? chatContainerMobileStyle : {}) }}>
+        <div style={{ ...messagesContainerStyle, ...(isMobile ? messagesContainerMobileStyle : {}) }}>
           {messages.length === 0 && (
             <div style={welcomeMessageStyle}>
               <FiMessageCircle size={48} color="#4CAF50" />
@@ -165,19 +167,19 @@ const AIChat = ({ user }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSend} style={inputFormStyle}>
+        <form onSubmit={handleSend} style={{ ...inputFormStyle, ...(isMobile ? inputFormMobileStyle : {}) }}>
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about poultry farming..."
-            style={inputStyle}
+            style={{ ...inputStyle, ...(isMobile ? inputMobileStyle : {}) }}
             disabled={loading}
           />
-          <button type="button" className="btn" onClick={recording ? stopRecording : startRecording} disabled={loading}>
+          <button type="button" className="btn" onClick={recording ? stopRecording : startRecording} disabled={loading} style={isMobile ? buttonMobileStyle : undefined}>
             {recording ? <><FiSquare /> Stop</> : <><FiMic /> Voice</>}
           </button>
-          <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()}>
+          <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()} style={isMobile ? buttonMobileStyle : undefined}>
             <FiSend /> Send
           </button>
         </form>
@@ -192,6 +194,10 @@ const chatContainerStyle = {
   flexDirection: 'column'
 };
 
+const chatContainerMobileStyle = {
+  height: 'calc(100vh - 180px)'
+};
+
 const messagesContainerStyle = {
   flex: 1,
   overflowY: 'auto',
@@ -199,6 +205,11 @@ const messagesContainerStyle = {
   backgroundColor: '#f9f9f9',
   borderRadius: '8px',
   marginBottom: '20px'
+};
+
+const messagesContainerMobileStyle = {
+  padding: '12px',
+  marginBottom: '0'
 };
 
 const welcomeMessageStyle = {
@@ -242,12 +253,41 @@ const inputFormStyle = {
   gap: '10px'
 };
 
+const inputFormMobileStyle = {
+  position: 'sticky',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  padding: '10px',
+  gap: '8px',
+  background: '#fff',
+  borderTop: '1px solid #eee',
+  marginTop: '8px',
+  paddingBottom: 'calc(10px + env(safe-area-inset-bottom))',
+  zIndex: 2
+};
+
 const inputStyle = {
   flex: 1,
   padding: '12px',
   border: '1px solid #ddd',
   borderRadius: '6px',
   fontSize: '16px'
+};
+
+const inputMobileStyle = {
+  padding: '12px',
+  fontSize: '16px'
+};
+
+const buttonMobileStyle = {
+  minWidth: '64px',
+  height: '44px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '6px',
+  fontSize: '14px'
 };
 
 export default AIChat;
