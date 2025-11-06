@@ -394,12 +394,6 @@ const audioButtonStyle = {
   opacity: 0.8
 };
 
-// Add hover effect via inline style with onMouseEnter/onMouseLeave
-const audioButtonHoverStyle = {
-  ...audioButtonStyle,
-  opacity: 1,
-  backgroundColor: 'rgba(76, 175, 80, 0.1)'
-};
 
 export default AIChat;
 
