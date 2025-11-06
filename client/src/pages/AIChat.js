@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiSend, FiMessageCircle } from 'react-icons/fi';
+import { FiSend, FiMessageCircle, FiMic, FiSquare } from 'react-icons/fi';
 import api from '../services/api';
 
 const AIChat = ({ user }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -46,6 +49,69 @@ const AIChat = ({ user }) => {
       setLoading(false);
     }
   };
+
+  const startRecording = async () => {
+    if (recording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      recordedChunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+        }
+      };
+      mr.onstop = async () => {
+        try {
+          const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+          const base64 = await blobToBase64(blob);
+          setMessages(prev => [...prev, { role: 'user', content: '[Voice message]' }]);
+          setLoading(true);
+          // Transcribe
+          const t = await api.post('/ai/transcribe', { audioBase64: base64, mimeType: 'audio/webm' });
+          const text = (t.data?.text || '').trim();
+          if (text) {
+            setMessages(prev => [...prev, { role: 'user', content: text }]);
+            const context = messages
+              .filter(m => m.role !== 'system')
+              .slice(-10)
+              .map(m => ({ role: m.role, content: m.content }));
+            const resp = await api.post('/ai/chat', { message: text, context });
+            setMessages(prev => [...prev, { role: 'assistant', content: resp.data.response }]);
+          } else {
+            setMessages(prev => [...prev, { role: 'assistant', content: 'I could not understand the audio clearly. Please try again.' }]);
+          }
+        } catch (err) {
+          setMessages(prev => [...prev, { role: 'assistant', content: 'Voice processing failed. Please try again.' }]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      mediaRecorderRef.current = mr;
+      mr.start();
+      setRecording(true);
+    } catch (err) {
+      alert('Microphone access denied or unsupported browser.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (!recording || !mediaRecorderRef.current) return;
+    mediaRecorderRef.current.stop();
+    mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+    setRecording(false);
+  };
+
+  const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result || '';
+      const idx = typeof result === 'string' ? result.indexOf(',') : -1;
+      resolve(idx >= 0 ? result.slice(idx + 1) : '');
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 
   return (
     <div className="container">
@@ -108,6 +174,9 @@ const AIChat = ({ user }) => {
             style={inputStyle}
             disabled={loading}
           />
+          <button type="button" className="btn" onClick={recording ? stopRecording : startRecording} disabled={loading}>
+            {recording ? <><FiSquare /> Stop</> : <><FiMic /> Voice</>}
+          </button>
           <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()}>
             <FiSend /> Send
           </button>
