@@ -53,7 +53,7 @@ Always respond in simple, clear language that farmers with limited technical kno
         ...(context || []),
         { role: 'user', content: fullMessage }
       ],
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.7,
       max_tokens: 1024
     });
@@ -105,7 +105,7 @@ router.post('/summarize', auth, async (req, res) => {
         { role: 'system', content: 'You are a helpful assistant that summarizes and translates agricultural content in simple, clear language.' },
         { role: 'user', content: prompt }
       ],
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.5,
       max_tokens: 512
     });
