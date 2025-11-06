@@ -37,11 +37,25 @@ const Navbar = ({ user, onLogout }) => {
     navLinks.push({ path: '/admin', icon: FiSettings, label: 'Admin' });
   }
 
+  // Determine if mobile screen
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const logoText = isMobile ? '🐔 Appah Farms' : '🐔 Appah Farms Knowledge Hub';
+
   return (
     <nav className="navbar">
       <div className="navbar__container">
         <div className="navbar__logo">
-          <span className="navbar__logoText">🐔 Appah Farms Knowledge Hub</span>
+          <span className="navbar__logoText">{logoText}</span>
         </div>
         <div className="navbar__links">
           {navLinks.map(link => {

@@ -69,30 +69,88 @@
 
 /* Mobile improvements */
 @media (max-width: 768px) {
+  .navbar {
+    padding: 10px 0;
+  }
+  
   .navbar__container {
     padding: 0 12px;
     gap: 8px;
+    flex-wrap: nowrap;
   }
+  
+  .navbar__logo {
+    flex-shrink: 0;
+    min-width: 0;
+  }
+  
+  .navbar__logoText {
+    font-size: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+  }
+  
   .navbar__links {
     flex: 1;
     min-width: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
     scrollbar-width: none; /* Firefox */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
-  .navbar__links::-webkit-scrollbar { display: none; }
+  
+  .navbar__links::-webkit-scrollbar { 
+    display: none; 
+  }
+  
   .navbar__link {
     padding: 8px 10px;
     gap: 6px;
     font-size: 13px;
+    flex-shrink: 0;
   }
-  .navbar__logout { padding: 8px 10px; font-size: 13px; }
+  
+  .navbar__logout { 
+    padding: 8px 10px; 
+    font-size: 13px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
 }
 
 /* Very small screens: show icons primarily */
-@media (max-width: 420px) {
-  .navbar__label { display: none; }
-  .navbar__link { padding: 8px; }
+@media (max-width: 480px) {
+  .navbar__logoText {
+    font-size: 14px;
+    max-width: 100px;
+  }
+  
+  .navbar__label { 
+    display: none; 
+  }
+  
+  .navbar__link { 
+    padding: 8px; 
+    min-width: 40px;
+    justify-content: center;
+  }
+  
+  .navbar__logout {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+
+/* Extra small screens: shorten logo further */
+@media (max-width: 360px) {
+  .navbar__logoText {
+    font-size: 12px;
+    max-width: 80px;
+  }
 }
 
 /* Dark mode */
