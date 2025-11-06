@@ -22,7 +22,7 @@ app.use('/api/admin', require('./routes/admin'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'AI Farming API is running' });
+  res.json({ status: 'OK', message: 'Appah Farms Knowledge Hub API is running' });
 });
 
 // Prisma initialization (database connection handled per request by Prisma)

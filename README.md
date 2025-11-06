@@ -1,4 +1,4 @@
-# AI Farming - Poultry Farming Community Platform
+# Appah Farms Knowledge Hub
 
 A comprehensive web application designed to help poultry farmers connect, share knowledge, and get AI-powered assistance for their farming needs.
 
@@ -59,7 +59,7 @@ A comprehensive web application designed to help poultry farmers connect, share 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd aifarming
+   cd appah-farms-knowledge-hub
    ```
 
 2. **Install dependencies**
@@ -117,7 +117,7 @@ To create an admin user, you can either:
 1. Manually update a user in MongoDB to set `role: 'admin'`
 2. Use MongoDB shell:
    ```javascript
-   use aifarming
+   use appah_farms_knowledge_hub
    db.users.updateOne({ email: "your-email@example.com" }, { $set: { role: "admin" } })
    ```
 
@@ -169,7 +169,7 @@ To create an admin user, you can either:
 ## Project Structure
 
 ```
-aifarming/
+appah-farms-knowledge-hub/
 ├── server/
 │   ├── models/          # MongoDB models
 │   ├── routes/          # API routes

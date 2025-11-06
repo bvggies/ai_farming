@@ -41,7 +41,7 @@ const Navbar = ({ user, onLogout }) => {
     <nav className="navbar">
       <div className="navbar__container">
         <div className="navbar__logo">
-          <span className="navbar__logoText">🐔 AI Farming</span>
+          <span className="navbar__logoText">🐔 Appah Farms Knowledge Hub</span>
         </div>
         <div className="navbar__links">
           {navLinks.map(link => {

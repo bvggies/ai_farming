@@ -122,7 +122,7 @@ const AIChat = ({ user }) => {
 
   return (
     <div className="container" style={{ paddingBottom: isMobile ? '90px' : '24px' }}>
-      <h1>AI Farming Assistant</h1>
+      <h1>Appah Farms AI Assistant</h1>
       <p style={{ color: '#666', marginBottom: '20px' }}>
         Ask me anything about poultry farming - health, feeding, housing, management, and more!
       </p>
@@ -133,7 +133,7 @@ const AIChat = ({ user }) => {
             <div style={welcomeMessageStyle}>
               <FiMessageCircle size={48} color="#4CAF50" />
               <h2>Hello, {user.name}!</h2>
-              <p>I'm your AI farming assistant. I can help you with:</p>
+              <p>I'm your AI assistant from Appah Farms Knowledge Hub. I can help you with:</p>
               <ul style={helpListStyle}>
                 <li>Poultry health and disease prevention</li>
                 <li>Feeding and nutrition advice</li>

@@ -1,6 +1,6 @@
 # Quick Setup Guide
 
-Follow these steps to get your AI Farming application running:
+Follow these steps to get your Appah Farms Knowledge Hub application running:
 
 ## Step 1: Install Dependencies
 

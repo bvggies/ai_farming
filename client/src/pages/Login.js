@@ -29,7 +29,7 @@ const Login = ({ onLogin }) => {
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h1 style={titleStyle}>🐔 Welcome to AI Farming</h1>
+        <h1 style={titleStyle}>🐔 Welcome to Appah Farms Knowledge Hub</h1>
         <p style={subtitleStyle}>Sign in to your account</p>
 
         {error && <div className="alert alert-error">{error}</div>}

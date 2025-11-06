@@ -36,7 +36,7 @@ After deploying, test the health endpoint:
 https://ai-farming-seven.vercel.app/api/health
 ```
 
-Should return: `{"status":"OK","message":"AI Farming API is running"}`
+Should return: `{"status":"OK","message":"Appah Farms Knowledge Hub API is running"}`
 
 ### Step 5: Check Vercel Function Logs
 

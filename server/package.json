@@ -1,7 +1,7 @@
 {
-  "name": "aifarming-server",
+  "name": "appah-farms-knowledge-hub-server",
   "version": "1.0.0",
-  "description": "Backend server for AI Farming platform",
+  "description": "Backend server for Appah Farms Knowledge Hub",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

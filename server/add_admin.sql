@@ -13,7 +13,7 @@ INSERT INTO users (
   is_active
 ) VALUES (
   'Admin User',
-  'admin@aifarming.com',
+  'admin@appahfarms.com',
   '$2a$10$YOUR_PASSWORD_HASH_HERE', -- Replace with hash from generate_password_hash.js
   '',
   '',

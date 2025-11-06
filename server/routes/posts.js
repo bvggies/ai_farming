@@ -40,7 +40,7 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
       const uploads = await Promise.all(
-        req.files.map((file) => cloudinary.uploader.upload_stream({ folder: 'aifarming/posts' }, (err, result) => {}))
+        req.files.map((file) => cloudinary.uploader.upload_stream({ folder: 'appah-farms/posts' }, (err, result) => {}))
       );
     }
 
@@ -48,7 +48,7 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ folder: 'aifarming/posts' }, (error, result) => {
+          const stream = cloudinary.uploader.upload_stream({ folder: 'appah-farms/posts' }, (error, result) => {
             if (error) return reject(error);
             resolve(result);
           });

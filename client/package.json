@@ -1,7 +1,7 @@
 {
-  "name": "aifarming-client",
+  "name": "appah-farms-knowledge-hub-client",
   "version": "1.0.0",
-  "description": "Frontend for AI Farming platform",
+  "description": "Frontend for Appah Farms Knowledge Hub",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
