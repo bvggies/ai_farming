@@ -34,9 +34,11 @@ const AIChat = ({ user }) => {
         .slice(-10)
         .map(m => ({ role: m.role, content: m.content }));
 
+      const userLang = user?.preferredLanguage || 'en';
       const response = await api.post('/ai/chat', {
         message: userMessage,
-        context
+        context,
+        language: userLang
       });
 
       setMessages(prev => [...prev, { role: 'assistant', content: response.data.response }]);
@@ -67,8 +69,13 @@ const AIChat = ({ user }) => {
           const base64 = await blobToBase64(blob);
           setMessages(prev => [...prev, { role: 'user', content: '[Voice message]' }]);
           setLoading(true);
-          // Transcribe
-          const t = await api.post('/ai/transcribe', { audioBase64: base64, mimeType: 'audio/webm' });
+          // Transcribe with user's preferred language
+          const userLang = user?.preferredLanguage || 'en';
+          const t = await api.post('/ai/transcribe', { 
+            audioBase64: base64, 
+            mimeType: 'audio/webm',
+            language: userLang 
+          });
           const text = (t.data?.text || '').trim();
           if (text) {
             setMessages(prev => [...prev, { role: 'user', content: text }]);
@@ -76,10 +83,17 @@ const AIChat = ({ user }) => {
               .filter(m => m.role !== 'system')
               .slice(-10)
               .map(m => ({ role: m.role, content: m.content }));
-            const resp = await api.post('/ai/chat', { message: text, context });
+            const resp = await api.post('/ai/chat', { 
+              message: text, 
+              context,
+              language: userLang 
+            });
             setMessages(prev => [...prev, { role: 'assistant', content: resp.data.response }]);
           } else {
-            setMessages(prev => [...prev, { role: 'assistant', content: 'I could not understand the audio clearly. Please try again.' }]);
+            const errorMsg = userLang === 'tw' 
+              ? 'Mentumi nte asɛm no yiye. Mesrɛ wo, san gye bio.'
+              : 'I could not understand the audio clearly. Please try again.';
+            setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
           }
         } catch (err) {
           console.error('Voice processing error:', err);

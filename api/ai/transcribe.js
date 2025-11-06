@@ -4,10 +4,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { audioBase64, mimeType } = req.body || {};
+    const { audioBase64, mimeType, language } = req.body || {};
     if (!audioBase64) {
       return res.status(400).json({ message: 'audioBase64 is required' });
     }
+    
+    // Map language codes: 'tw' for Twi, 'en' for English, or 'auto' for auto-detect
+    const langCode = language === 'tw' ? 'tw' : (language === 'en' ? 'en' : null);
     const apiKey = process.env.GROQ_API_KEY || process.env.GROQ || process.env.GROQ_API;
     if (!apiKey) {
       return res.status(500).json({ message: 'Missing GROQ_API_KEY' });
@@ -32,8 +35,19 @@ module.exports = async (req, res) => {
     formParts.push(
       `Content-Disposition: form-data; name="model"\r\n\r\n`,
       `whisper-large-v3\r\n`,
-      `--${boundary}--\r\n`
+      `--${boundary}\r\n`
     );
+    
+    // Add language field if specified (Twi: 'tw', English: 'en', or omit for auto-detect)
+    if (langCode) {
+      formParts.push(
+        `Content-Disposition: form-data; name="language"\r\n\r\n`,
+        `${langCode}\r\n`,
+        `--${boundary}--\r\n`
+      );
+    } else {
+      formParts.push(`--${boundary}--\r\n`);
+    }
     
     const formData = Buffer.concat(formParts.map(part => 
       Buffer.isBuffer(part) ? part : Buffer.from(part, 'utf8')

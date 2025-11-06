@@ -4,12 +4,25 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { message, context = [] } = req.body || {};
+    const { message, context = [], language } = req.body || {};
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ message: 'Message is required' });
     }
 
-    const systemPrompt = `You are a helpful AI assistant specialized in poultry farming. You provide practical, easy-to-understand advice on:
+    // Determine response language: 'tw' for Twi, default to English
+    const responseLang = language === 'tw' ? 'tw' : 'en';
+    
+    const systemPrompt = responseLang === 'tw' 
+      ? `Woyɛ AI kɔkɔbɔ a ɛboa nkoko a wɔyɛ nkoko ho adwuma. Ma nkɔmmɔ a ɛyɛ mfaso wɔ:
+- Nkoko ho ayaresabea ne yare a ɛkɔ so
+- Aduan ne aduan a ɛfata
+- Fie ne nkɔso
+- Nkosua a wɔyɛ no mu nkɔso
+- Broiler ne layer ho nkɔso
+- Nkɔso a ɛfata ma nkoko a wɔyɛ no kakraa bi ne nkoko a wɔyɛ no pii
+
+Ma nkɔmmɔ wɔ Twi kasa mu a ɛyɛ den kɛse, na ɛboa. Sɛ wunim biribi a, ka sɛ wɔbɛhwehwɛ ɔyarefo anaa ɔkwanso a ɔnim nkoko ho adwuma.`
+      : `You are a helpful AI assistant specialized in poultry farming. You provide practical, easy-to-understand advice on:
 - Poultry health and disease prevention
 - Feeding and nutrition
 - Housing and management
