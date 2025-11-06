@@ -262,15 +262,17 @@ const AIChat = ({ user }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about poultry farming..."
-            style={{ ...inputStyle, ...(isMobile ? inputMobileStyle : {}) }}
+            style={{ ...inputStyle, ...(isMobile ? inputMobileStyle : {}), width: '100%', marginBottom: '10px' }}
             disabled={loading}
           />
-          <button type="button" className="btn" onClick={recording ? stopRecording : startRecording} disabled={loading} style={isMobile ? buttonMobileStyle : undefined}>
-            {recording ? <><FiSquare /> Stop</> : <><FiMic /> Voice</>}
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()} style={isMobile ? buttonMobileStyle : undefined}>
-            <FiSend /> Send
-          </button>
+          <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+            <button type="button" className="btn" onClick={recording ? stopRecording : startRecording} disabled={loading} style={isMobile ? buttonMobileStyle : buttonRowStyle}>
+              {recording ? <><FiSquare /> Stop</> : <><FiMic /> Voice</>}
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()} style={isMobile ? buttonMobileStyle : buttonRowStyle}>
+              <FiSend /> Send
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -339,6 +341,7 @@ const messageContentStyle = {
 
 const inputFormStyle = {
   display: 'flex',
+  flexDirection: 'column',
   gap: '10px'
 };
 
@@ -354,6 +357,11 @@ const inputFormMobileStyle = {
   marginTop: '8px',
   paddingBottom: 'calc(10px + env(safe-area-inset-bottom))',
   zIndex: 2
+};
+
+const buttonRowStyle = {
+  flex: 1,
+  minWidth: '120px'
 };
 
 const inputStyle = {
