@@ -82,7 +82,12 @@ const AIChat = ({ user }) => {
             setMessages(prev => [...prev, { role: 'assistant', content: 'I could not understand the audio clearly. Please try again.' }]);
           }
         } catch (err) {
-          setMessages(prev => [...prev, { role: 'assistant', content: 'Voice processing failed. Please try again.' }]);
+          console.error('Voice processing error:', err);
+          const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Unknown error';
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: `Voice processing failed: ${errorMsg}. Please try again or use text input.` 
+          }]);
         } finally {
           setLoading(false);
         }
