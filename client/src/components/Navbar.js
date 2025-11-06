@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiHome, FiMessageSquare, FiBook, FiUser, FiSettings } from 'react-icons/fi';
 import api from '../services/api';
+import './Navbar.css';
 
 const Navbar = ({ user, onLogout }) => {
   const location = useLocation();
@@ -37,13 +38,12 @@ const Navbar = ({ user, onLogout }) => {
   }
 
   return (
-    <nav style={navbarStyle}>
-      <div style={navContainerStyle}>
-        <div style={logoStyle}>
-          <span style={logoTextStyle}>🐔 AI Farming</span>
+    <nav className="navbar">
+      <div className="navbar__container">
+        <div className="navbar__logo">
+          <span className="navbar__logoText">🐔 AI Farming</span>
         </div>
-        
-        <div style={navLinksStyle}>
+        <div className="navbar__links">
           {navLinks.map(link => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path;
@@ -51,83 +51,20 @@ const Navbar = ({ user, onLogout }) => {
               <Link
                 key={link.path}
                 to={link.path}
-                style={{
-                  ...navLinkStyle,
-                  ...(isActive ? activeNavLinkStyle : {})
-                }}
+                className={`navbar__link ${isActive ? 'is-active' : ''}`}
               >
-                <Icon style={{ marginRight: '8px' }} />
-                {link.label}
+                <Icon className="navbar__icon" />
+                <span className="navbar__label">{link.label}</span>
               </Link>
             );
           })}
-          
-          <button onClick={onLogout} style={logoutButtonStyle}>
+          <button onClick={onLogout} className="navbar__logout">
             Logout
           </button>
         </div>
       </div>
     </nav>
   );
-};
-
-const navbarStyle = {
-  backgroundColor: '#4CAF50',
-  color: 'white',
-  padding: '12px 0',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-};
-
-const navContainerStyle = {
-  maxWidth: '1200px',
-  margin: '0 auto',
-  padding: '0 20px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  flexWrap: 'wrap'
-};
-
-const logoStyle = {
-  fontSize: '20px',
-  fontWeight: 'bold'
-};
-
-const logoTextStyle = {
-  fontSize: '20px'
-};
-
-const navLinksStyle = {
-  display: 'flex',
-  gap: '10px',
-  alignItems: 'center',
-  flexWrap: 'wrap'
-};
-
-const navLinkStyle = {
-  color: 'white',
-  textDecoration: 'none',
-  padding: '8px 16px',
-  borderRadius: '6px',
-  display: 'flex',
-  alignItems: 'center',
-  transition: 'background-color 0.3s',
-  fontSize: '14px'
-};
-
-const activeNavLinkStyle = {
-  backgroundColor: 'rgba(255,255,255,0.2)'
-};
-
-const logoutButtonStyle = {
-  backgroundColor: 'rgba(255,255,255,0.2)',
-  color: 'white',
-  border: 'none',
-  padding: '8px 16px',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '14px',
-  fontWeight: '500'
 };
 
 export default Navbar;

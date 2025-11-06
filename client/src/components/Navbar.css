@@ -1,0 +1,103 @@
+.navbar {
+  background-color: #4CAF50;
+  color: #fff;
+  padding: 12px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 900;
+}
+
+.navbar__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar__logo {
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.navbar__logoText { font-size: 20px; }
+
+.navbar__links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.navbar__link {
+  color: #fff;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.navbar__link:is(:hover, :focus-visible) {
+  background-color: rgba(255,255,255,0.2);
+}
+
+.navbar__link.is-active {
+  background-color: rgba(255,255,255,0.22);
+}
+
+.navbar__icon { line-height: 0; }
+
+.navbar__label { line-height: 1; }
+
+.navbar__logout {
+  background-color: rgba(255,255,255,0.2);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Mobile improvements */
+@media (max-width: 768px) {
+  .navbar__container {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .navbar__links {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none; /* Firefox */
+  }
+  .navbar__links::-webkit-scrollbar { display: none; }
+  .navbar__link {
+    padding: 8px 10px;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .navbar__logout { padding: 8px 10px; font-size: 13px; }
+}
+
+/* Very small screens: show icons primarily */
+@media (max-width: 420px) {
+  .navbar__label { display: none; }
+  .navbar__link { padding: 8px; }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .navbar { box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+}
+
+
