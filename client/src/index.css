@@ -28,3 +28,10 @@ input, textarea, select {
   font-family: inherit;
 }
 
+/* Reserve space for bottom mobile bar on small screens */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 84px; /* mobile bar height + margin */
+  }
+}
+

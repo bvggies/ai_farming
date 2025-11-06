@@ -12,6 +12,7 @@ import KnowledgeBase from './pages/KnowledgeBase';
 import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
 import Navbar from './components/Navbar';
+import MobileBar from './components/MobileBar';
 import './App.css';
 
 function App() {
@@ -100,6 +101,7 @@ function App() {
             element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
           />
         </Routes>
+        {user && <MobileBar user={user} />}
       </div>
     </Router>
   );
