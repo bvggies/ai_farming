@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FiUsers, FiFileText, FiBook, FiTrendingUp, FiCheckCircle, FiXCircle, 
-  FiEdit, FiTrash2, FiPlus, FiBarChart2, FiClock, FiShield, FiSettings,
+  FiEdit, FiTrash2, FiPlus, FiBarChart2, FiClock, FiShield,
   FiSearch, FiFilter, FiRefreshCw, FiEye, FiEyeOff, FiDownload, FiSun, FiMoon
 } from 'react-icons/fi';
 import api from '../services/api';

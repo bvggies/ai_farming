@@ -182,14 +182,6 @@ const AIChat = ({ user }) => {
     setPlayingIndex(index);
   };
 
-  const stopAudio = () => {
-    if (speechSynthRef.current) {
-      window.speechSynthesis.cancel();
-      speechSynthRef.current = null;
-      setPlayingIndex(null);
-    }
-  };
-
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   return (
@@ -455,34 +447,6 @@ const inputFormMobileStyle = {
   marginTop: '8px',
   paddingBottom: 'calc(10px + env(safe-area-inset-bottom))',
   zIndex: 2
-};
-
-const buttonRowStyle = {
-  flex: 1,
-  minWidth: '120px'
-};
-
-const inputStyle = {
-  flex: 1,
-  padding: '12px',
-  border: '1px solid #ddd',
-  borderRadius: '6px',
-  fontSize: '16px'
-};
-
-const inputMobileStyle = {
-  padding: '12px',
-  fontSize: '16px'
-};
-
-const buttonMobileStyle = {
-  minWidth: '64px',
-  height: '44px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '6px',
-  fontSize: '14px'
 };
 
 const audioButtonStyle = {

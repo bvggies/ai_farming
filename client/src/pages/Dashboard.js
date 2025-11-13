@@ -12,7 +12,6 @@ const Dashboard = ({ user }) => {
   const [recentPosts, setRecentPosts] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderForm, setReminderForm] = useState({
     type: 'vaccination',
@@ -38,7 +37,6 @@ const Dashboard = ({ user }) => {
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
       const [postsRes, remindersRes, activityRes] = await Promise.all([
         api.get('/posts?limit=5').catch(() => ({ data: [] })),
         api.get('/reminders').catch(() => ({ data: [] })),
@@ -66,8 +64,6 @@ const Dashboard = ({ user }) => {
       });
     } catch (error) {
       console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
