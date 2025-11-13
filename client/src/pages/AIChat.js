@@ -193,10 +193,7 @@ const AIChat = ({ user }) => {
 
   return (
     <div className="container" style={{ paddingBottom: isMobile ? '90px' : '24px' }}>
-      <h1>Appah Farms AI Assistant</h1>
-      <p style={{ color: '#666', marginBottom: '20px' }}>
-        Ask me anything about poultry farming - health, feeding, housing, management, and more!
-      </p>
+      <h1>Appah Farms AI</h1>
 
       <div className="card" style={{ ...chatContainerStyle, ...(isMobile ? chatContainerMobileStyle : {}) }}>
         <div style={{ ...messagesContainerStyle, ...(isMobile ? messagesContainerMobileStyle : {}) }}>
@@ -204,15 +201,8 @@ const AIChat = ({ user }) => {
             <div style={welcomeMessageStyle}>
               <FiMessageCircle size={48} color="#4CAF50" />
               <h2>Hello, {user.name}!</h2>
-              <p>I'm your AI assistant from Appah Farms Knowledge Hub. I can help you with:</p>
-              <ul style={helpListStyle}>
-                <li>Poultry health and disease prevention</li>
-                <li>Feeding and nutrition advice</li>
-                <li>Housing and management tips</li>
-                <li>Egg production optimization</li>
-                <li>General farming best practices</li>
-              </ul>
-              <p>Ask me anything!</p>
+              <p>I'm Appah Farm AI, I'm here to assist you with Poultry farming related questions</p>
+              <p>Is there anything i can help you with now?</p>
             </div>
           )}
 
@@ -257,21 +247,64 @@ const AIChat = ({ user }) => {
         </div>
 
         <form onSubmit={handleSend} style={{ ...inputFormStyle, ...(isMobile ? inputFormMobileStyle : {}) }}>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about poultry farming..."
-            style={{ ...inputStyle, ...(isMobile ? inputMobileStyle : {}), width: '100%', marginBottom: '10px' }}
-            disabled={loading}
-          />
-          <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-            <button type="button" className="btn" onClick={recording ? stopRecording : startRecording} disabled={loading} style={isMobile ? buttonMobileStyle : buttonRowStyle}>
-              {recording ? <><FiSquare /> Stop</> : <><FiMic /> Voice</>}
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={loading || !input.trim()} style={isMobile ? buttonMobileStyle : buttonRowStyle}>
-              <FiSend /> Send
-            </button>
+          <div style={getInputContainerStyle(inputFocused)}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask me anything about poultry farming"
+              style={{ ...modernInputStyle, ...(isMobile ? modernInputMobileStyle : {}) }}
+              disabled={loading}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+            />
+            <div style={inputButtonsContainerStyle}>
+              <button 
+                type="button" 
+                onClick={recording ? stopRecording : startRecording} 
+                disabled={loading} 
+                style={{ 
+                  ...inputButtonStyle, 
+                  ...(recording ? recordingButtonStyle : {}),
+                  ...(loading ? disabledButtonStyle : {})
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                title={recording ? 'Stop recording' : 'Voice input'}
+              >
+                {recording ? <FiSquare size={20} /> : <FiMic size={20} />}
+              </button>
+              <button 
+                type="submit" 
+                disabled={loading || !input.trim()} 
+                style={{ 
+                  ...inputButtonStyle, 
+                  ...sendButtonStyle, 
+                  ...(!input.trim() ? disabledButtonStyle : {})
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading && input.trim()) {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+                title="Send message"
+              >
+                <FiSend size={20} />
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -309,12 +342,6 @@ const welcomeMessageStyle = {
   color: '#666'
 };
 
-const helpListStyle = {
-  textAlign: 'left',
-  display: 'inline-block',
-  margin: '20px 0'
-};
-
 const messageStyle = {
   marginBottom: '15px',
   padding: '12px 16px',
@@ -343,6 +370,76 @@ const inputFormStyle = {
   display: 'flex',
   flexDirection: 'column',
   gap: '10px'
+};
+
+const modernInputContainerStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  backgroundColor: '#fff',
+  border: '2px solid #e5e7eb',
+  borderRadius: '24px',
+  padding: '4px 4px 4px 16px',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+  transition: 'all 0.3s ease',
+  gap: '8px'
+};
+
+// Add hover effect via inline style with onFocus/onBlur
+const getInputContainerStyle = (isFocused) => ({
+  ...modernInputContainerStyle,
+  borderColor: isFocused ? '#4CAF50' : '#e5e7eb',
+  boxShadow: isFocused ? '0 4px 12px rgba(76, 175, 80, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.08)'
+});
+
+const modernInputStyle = {
+  flex: 1,
+  border: 'none',
+  outline: 'none',
+  fontSize: '16px',
+  padding: '12px 8px',
+  backgroundColor: 'transparent',
+  color: '#1f2937'
+};
+
+const modernInputMobileStyle = {
+  fontSize: '16px',
+  padding: '10px 6px'
+};
+
+const inputButtonsContainerStyle = {
+  display: 'flex',
+  gap: '6px',
+  alignItems: 'center'
+};
+
+const inputButtonStyle = {
+  width: '44px',
+  height: '44px',
+  borderRadius: '50%',
+  border: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  backgroundColor: '#f3f4f6',
+  color: '#6b7280'
+};
+
+
+const recordingButtonStyle = {
+  backgroundColor: '#fee2e2',
+  color: '#dc2626'
+};
+
+const sendButtonStyle = {
+  backgroundColor: '#4CAF50',
+  color: 'white'
+};
+
+const disabledButtonStyle = {
+  opacity: 0.5,
+  cursor: 'not-allowed'
 };
 
 const inputFormMobileStyle = {
