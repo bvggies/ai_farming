@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiBookOpen } from 'react-icons/fi';
+import { FiSearch, FiBookOpen, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import api from '../services/api';
+import './KnowledgeBase.css';
 
 const KnowledgeBase = ({ user }) => {
   const [entries, setEntries] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [expandedFaqs, setExpandedFaqs] = useState(new Set());
 
   useEffect(() => {
     fetchEntries();
@@ -37,6 +39,28 @@ const KnowledgeBase = ({ user }) => {
     } catch (error) {
       console.error('Error fetching entry:', error);
     }
+  };
+
+  const toggleFaq = async (entryId) => {
+    const newExpanded = new Set(expandedFaqs);
+    if (newExpanded.has(entryId)) {
+      newExpanded.delete(entryId);
+    } else {
+      newExpanded.add(entryId);
+      // Increment view count when FAQ is expanded
+      try {
+        const response = await api.get(`/knowledge?id=${entryId}`);
+        // Update the entry in the entries array with the latest data (including updated view count)
+        setEntries(prevEntries => 
+          prevEntries.map(entry => 
+            (entry._id === entryId || entry.id === entryId) ? response.data : entry
+          )
+        );
+      } catch (error) {
+        console.error('Error fetching FAQ:', error);
+      }
+    }
+    setExpandedFaqs(newExpanded);
   };
 
   const faqs = entries.filter(e => (e.category || '').toLowerCase() === 'faq');
@@ -114,22 +138,51 @@ const KnowledgeBase = ({ user }) => {
           {faqs.length > 0 && (
             <div className="card" style={{ marginBottom: '20px' }}>
               <h2 style={{ marginTop: 0 }}>Frequently Asked Questions</h2>
-              <div>
-                {faqs.map(entry => (
-                  <div key={entry._id} style={{ padding: '12px 0', borderBottom: '1px solid #eee' }}>
-                    <div 
-                      style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
-                      onClick={() => handleEntryClick(entry._id)}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <FiBookOpen size={20} color="#4CAF50" />
-                        <strong>{entry.title}</strong>
+              <div className="faq-accordion">
+                {faqs.map(entry => {
+                  const isExpanded = expandedFaqs.has(entry._id || entry.id);
+                  return (
+                    <div key={entry._id || entry.id} className="faq-item">
+                      <div 
+                        className="faq-header"
+                        onClick={() => toggleFaq(entry._id || entry.id)}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                          <FiBookOpen size={20} color="#4CAF50" />
+                          <strong className="faq-title">{entry.title}</strong>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span style={{ fontSize: '12px', color: '#666' }}>{entry.views || 0} views</span>
+                          {isExpanded ? (
+                            <FiChevronUp size={20} color="#4CAF50" />
+                          ) : (
+                            <FiChevronDown size={20} color="#666" />
+                          )}
+                        </div>
                       </div>
-                      <span style={{ fontSize: '12px', color: '#666' }}>{entry.views || 0} views</span>
+                      {isExpanded && (
+                        <div className="faq-content">
+                          <div className="faq-answer">
+                            {entry.content}
+                          </div>
+                          {entry.tags && entry.tags.length > 0 && (
+                            <div className="faq-tags">
+                              <strong>Tags: </strong>
+                              {entry.tags.map((tag, idx) => (
+                                <span key={idx} className="faq-tag">{tag}</span>
+                              ))}
+                            </div>
+                          )}
+                          {entry.isAIVerified && (
+                            <div className="faq-verified">
+                              <span>✓ AI Verified</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <p style={{ color: '#666', margin: '8px 0 0' }}>{entry.content.substring(0, 140)}...</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
