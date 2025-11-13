@@ -8,6 +8,7 @@ const AIChat = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [playingIndex, setPlayingIndex] = useState(null);
+  const [inputFocused, setInputFocused] = useState(false);
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const messagesEndRef = useRef(null);
