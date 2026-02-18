@@ -186,42 +186,54 @@ const AIChat = ({ user }) => {
 
   return (
     <div className={`container ai-chat-page ${isMobile ? 'ai-chat-mobile' : ''}`} style={{ paddingBottom: isMobile ? '90px' : '24px' }}>
-      <h1 className="page-title">Appah Farms AI</h1>
+      <h1 className="ai-chat-page__title">Appah Farms AI</h1>
 
-      <div className="card ai-chat-card">
+      <div className="ai-chat-card">
         <div className="ai-chat-messages">
           {messages.length === 0 && (
             <div className="ai-chat-welcome">
-              <FiMessageCircle size={48} />
-              <h2>Hello, {user?.name || 'there'}!</h2>
-              <p>I'm Appah Farm AI. I'm here to help with poultry farming questions.</p>
-              <p>Ask me about health, feeding, housing, or best practices.</p>
+              <div className="ai-chat-welcome__icon-wrap">
+                <FiMessageCircle size={40} className="ai-chat-welcome__icon" />
+              </div>
+              <h2 className="ai-chat-welcome__title">Hello, {user?.name || 'there'}!</h2>
+              <p className="ai-chat-welcome__lead">I'm Appah Farm AI — here to help with poultry farming.</p>
+              <p className="ai-chat-welcome__hint">Ask about health, feeding, housing, or best practices.</p>
             </div>
           )}
 
           {messages.map((msg, idx) => (
-            <div key={idx} className={`ai-chat-msg ${msg.role === 'user' ? 'user' : 'assistant'}`}>
-              <div className="ai-chat-msg-header">
-                <strong>{msg.role === 'user' ? 'You' : 'AI Assistant'}</strong>
+            <div
+              key={`${idx}-${msg.role}`}
+              className={`ai-chat-msg ai-chat-msg--${msg.role === 'user' ? 'user' : 'assistant'}`}
+            >
+              <div className="ai-chat-msg__header">
+                <span className="ai-chat-msg__label">{msg.role === 'user' ? 'You' : 'AI Assistant'}</span>
                 {msg.role === 'assistant' && (
                   <button
                     type="button"
-                    className="ai-chat-btn voice"
+                    className="ai-chat-btn ai-chat-btn--voice"
                     onClick={() => playAudio(msg.content, idx)}
                     title={playingIndex === idx ? 'Stop playback' : 'Play audio'}
+                    aria-label={playingIndex === idx ? 'Stop playback' : 'Play audio'}
                   >
-                    {playingIndex === idx ? <FiVolumeX size={20} /> : <FiVolume2 size={20} />}
+                    {playingIndex === idx ? <FiVolumeX size={18} /> : <FiVolume2 size={18} />}
                   </button>
                 )}
               </div>
-              <div className="ai-chat-msg-content">{msg.content}</div>
+              <div className="ai-chat-msg__content">{msg.content}</div>
             </div>
           ))}
 
           {loading && (
-            <div className="ai-chat-msg assistant">
-              <div className="ai-chat-msg-header"><strong>AI Assistant</strong></div>
-              <div className="ai-chat-msg-content">Thinking...</div>
+            <div className="ai-chat-msg ai-chat-msg--assistant ai-chat-msg--typing">
+              <div className="ai-chat-msg__header">
+                <span className="ai-chat-msg__label">AI Assistant</span>
+              </div>
+              <div className="ai-chat-typing">
+                <span className="ai-chat-typing__dot" />
+                <span className="ai-chat-typing__dot" />
+                <span className="ai-chat-typing__dot" />
+              </div>
             </div>
           )}
 
@@ -229,31 +241,34 @@ const AIChat = ({ user }) => {
         </div>
 
         <form onSubmit={handleSend} className="ai-chat-form">
-          <div className="ai-chat-input-wrap">
+          <div className={`ai-chat-input-wrap ${recording ? 'ai-chat-input-wrap--recording' : ''}`}>
             <input
               type="text"
               className="ai-chat-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me anything about poultry farming"
+              placeholder="Ask about poultry farming..."
               disabled={loading}
+              aria-label="Message"
             />
             <button
               type="button"
-              className={`ai-chat-btn voice ${recording ? 'recording' : ''}`}
+              className={`ai-chat-btn ai-chat-btn--voice ${recording ? 'ai-chat-btn--recording' : ''}`}
               onClick={recording ? stopRecording : startRecording}
               disabled={loading}
               title={recording ? 'Stop recording' : 'Voice input'}
+              aria-label={recording ? 'Stop recording' : 'Voice input'}
             >
-              {recording ? <FiSquare size={20} /> : <FiMic size={20} />}
+              {recording ? <FiSquare size={18} /> : <FiMic size={18} />}
             </button>
             <button
               type="submit"
-              className="ai-chat-btn send"
+              className="ai-chat-btn ai-chat-btn--send"
               disabled={loading || !input.trim()}
               title="Send message"
+              aria-label="Send message"
             >
-              <FiSend size={20} />
+              <FiSend size={18} />
             </button>
           </div>
         </form>

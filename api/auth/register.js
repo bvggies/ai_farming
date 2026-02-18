@@ -7,11 +7,6 @@ module.exports = async (req, res) => {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  // Registration is closed: only Appah Farm workers/managers/supervisors added by admins
-  return res.status(403).json({
-    message: 'Registration is closed. Only Appah Farm workers, managers, and supervisors can use this system. Contact your administrator for an account.',
-  });
-
   try {
     const { name, email, password, farmSize = '', poultryType = '', preferredLanguage = 'en' } = req.body || {};
     
@@ -63,7 +58,7 @@ module.exports = async (req, res) => {
     try {
       inserted = await sql`
         INSERT INTO users (name, email, password, farm_size, poultry_type, preferred_language, role, is_active)
-        VALUES (${name}, ${email.toLowerCase().trim()}, ${hashed}, ${farmSize}, ${poultryType}, ${preferredLanguage}, 'farmer', true)
+        VALUES (${name}, ${email.toLowerCase().trim()}, ${hashed}, ${farmSize}, ${poultryType}, ${preferredLanguage}, 'worker', true)
         RETURNING id, name, email, farm_size, poultry_type, preferred_language, role
       `;
     } catch (err) {

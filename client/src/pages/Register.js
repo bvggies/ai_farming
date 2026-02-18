@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FiUser, FiMail, FiLock, FiGlobe } from 'react-icons/fi';
 import { authService } from '../services/authService';
+import './Register.css';
 
 const Register = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -14,6 +16,7 @@ const Register = ({ onLogin }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -32,118 +35,116 @@ const Register = ({ onLogin }) => {
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h1 style={titleStyle}>Create Your Account</h1>
-        <p style={subtitleStyle}>Join our farming community</p>
+    <div className="register-page">
+      <div className="register-bg-shape register-bg-shape--1" aria-hidden="true" />
+      <div className="register-bg-shape register-bg-shape--2" aria-hidden="true" />
 
-        {error && <div className="alert alert-error">{error}</div>}
+      <div className="register-card">
+        <div className="register-card__header">
+          <div className="register-card__logo">
+            <span className="register-card__logo-icon">🐔</span>
+          </div>
+          <h1 className="register-card__title">Join Appah Farms</h1>
+          <p className="register-card__subtitle">Create your worker account</p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Full Name *</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="Enter your full name"
-            />
+        <form onSubmit={handleSubmit} className="register-form">
+          {error && (
+            <div className="register-error" role="alert">
+              <span className="register-error__text">{error}</span>
+            </div>
+          )}
+
+          <div className="register-field">
+            <label htmlFor="register-name" className="register-field__label">Full name *</label>
+            <div className="register-field__input-wrap">
+              <FiUser className="register-field__icon" aria-hidden="true" />
+              <input
+                id="register-name"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="Your full name"
+                autoComplete="name"
+                className="register-field__input"
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Email *</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Enter your email"
-            />
+          <div className="register-field">
+            <label htmlFor="register-email" className="register-field__label">Email *</label>
+            <div className="register-field__input-wrap">
+              <FiMail className="register-field__icon" aria-hidden="true" />
+              <input
+                id="register-email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+                className="register-field__input"
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Password * (min. 6 characters)</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              minLength={6}
-              placeholder="Create a password"
-            />
+          <div className="register-field">
+            <label htmlFor="register-password" className="register-field__label">Password * (min 6 characters)</label>
+            <div className="register-field__input-wrap">
+              <FiLock className="register-field__icon" aria-hidden="true" />
+              <input
+                id="register-password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                minLength={6}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                className="register-field__input"
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Preferred Language</label>
-            <select
-              name="preferredLanguage"
-              value={formData.preferredLanguage}
-              onChange={handleChange}
-            >
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="sw">Swahili</option>
-            </select>
+          <div className="register-field">
+            <label htmlFor="register-lang" className="register-field__label">Preferred language</label>
+            <div className="register-field__input-wrap">
+              <FiGlobe className="register-field__icon" aria-hidden="true" />
+              <select
+                id="register-lang"
+                name="preferredLanguage"
+                value={formData.preferredLanguage}
+                onChange={handleChange}
+                className="register-field__input register-field__select"
+              >
+                <option value="en">English</option>
+                <option value="tw">Twi</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="sw">Swahili</option>
+              </select>
+            </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={buttonStyle} disabled={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
+          <button type="submit" className="register-submit" disabled={loading}>
+            {loading ? (
+              <span className="register-submit__spinner" aria-hidden="true" />
+            ) : (
+              'Create account'
+            )}
           </button>
         </form>
 
-        <p style={linkStyle}>
-          Already have an account? <Link to="/login">Sign in here</Link>
+        <p className="register-footer">
+          Already have an account? <Link to="/login" className="register-footer__link">Sign in</Link>
         </p>
       </div>
     </div>
   );
 };
 
-const containerStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  minHeight: '100vh',
-  padding: '20px'
-};
-
-const cardStyle = {
-  background: 'white',
-  borderRadius: '12px',
-  padding: '40px',
-  width: '100%',
-  maxWidth: '500px',
-  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-};
-
-const titleStyle = {
-  fontSize: '28px',
-  marginBottom: '10px',
-  textAlign: 'center',
-  color: '#333'
-};
-
-const subtitleStyle = {
-  textAlign: 'center',
-  color: '#666',
-  marginBottom: '30px'
-};
-
-const buttonStyle = {
-  width: '100%',
-  marginTop: '10px'
-};
-
-const linkStyle = {
-  textAlign: 'center',
-  marginTop: '20px',
-  color: '#666'
-};
-
 export default Register;
-

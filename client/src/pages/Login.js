@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
 import { authService } from '../services/authService';
 import './Login.css';
@@ -98,7 +99,8 @@ const Login = ({ onLogin }) => {
         </form>
 
         <p className="login-footer">
-          For Appah Farm workers, managers & supervisors. Contact your administrator for access.
+          For Appah Farm workers. Don't have an account?{' '}
+          <Link to="/register" className="login-footer__link">Register</Link>
         </p>
       </div>
     </div>

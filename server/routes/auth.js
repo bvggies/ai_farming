@@ -39,7 +39,7 @@ router.post('/register', [
     });
 
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user.id },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '7d' }
     );
@@ -90,7 +90,7 @@ router.post('/login', [
     }
 
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user.id },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '7d' }
     );
