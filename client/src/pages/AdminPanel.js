@@ -5,12 +5,14 @@
  * - Posts: card list; approve/reject; add post.
  * - Knowledge: list entries; filter by category; add/edit/delete; export.
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   FiUsers, FiFileText, FiBook, FiTrendingUp, FiCheckCircle, FiXCircle, 
   FiEdit, FiTrash2, FiPlus, FiBarChart2, FiClock, FiShield,
-  FiSearch, FiFilter, FiRefreshCw, FiEye, FiEyeOff, FiDownload, FiSun, FiMoon
+  FiSearch, FiFilter, FiRefreshCw, FiEye, FiEyeOff, FiDownload, FiSun, FiMoon, FiChevronDown
 } from 'react-icons/fi';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import api from '../services/api';
 import './AdminPanel.css';
 
@@ -25,6 +27,7 @@ const AdminPanel = ({ user }) => {
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [exporting, setExporting] = useState({ users: false, posts: false, knowledge: false });
   // Modals and forms
   const [showUserModal, setShowUserModal] = useState(false);
   const [showKnowledgeModal, setShowKnowledgeModal] = useState(false);
@@ -34,6 +37,8 @@ const AdminPanel = ({ user }) => {
   const [postForm, setPostForm] = useState({ title: '', content: '', type: 'tip' });
   const [knowledgeFilter, setKnowledgeFilter] = useState('all'); // 'all' | 'faq' | 'other'
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('admin_dark') === '1');
+  const [showExportMenu, setShowExportMenu] = useState({ users: false, posts: false, knowledge: false });
+  const exportMenuRefs = { users: useRef(null), posts: useRef(null), knowledge: useRef(null) };
 
   // Load overview stats on mount
   useEffect(() => {
@@ -223,6 +228,19 @@ const AdminPanel = ({ user }) => {
     }
   };
 
+  // Close export menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      Object.keys(exportMenuRefs).forEach(key => {
+        if (exportMenuRefs[key].current && !exportMenuRefs[key].current.contains(event.target)) {
+          setShowExportMenu(prev => ({ ...prev, [key]: false }));
+        }
+      });
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // CSV export helpers
   const downloadCSV = (filename, rows) => {
     const csv = [Object.keys(rows[0] || {}).join(','), ...rows.map(r => Object.values(r).map(v => typeof v === 'string' ? `"${v.replace(/"/g,'""')}"` : v).join(','))].join('\n');
@@ -235,22 +253,211 @@ const AdminPanel = ({ user }) => {
     document.body.removeChild(link);
   };
 
-  const exportUsers = () => {
-    const rows = users.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role, active: u.isActive }));
-    if (rows.length === 0) return alert('No users to export');
-    downloadCSV('users.csv', rows);
+  // PDF export helpers
+  const downloadPDF = (filename, title, rows, columns) => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text(title, 14, 22);
+    
+    // Add date
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    
+    // Add table
+    doc.autoTable({
+      head: [columns],
+      body: rows.map(row => columns.map(col => row[col] || '')),
+      startY: 35,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [46, 125, 50], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { top: 35 }
+    });
+    
+    doc.save(filename);
   };
 
-  const exportPosts = () => {
-    const rows = posts.map(p => ({ id: p.id, title: p.title, type: p.type, approved: p.isApproved }));
-    if (rows.length === 0) return alert('No posts to export');
-    downloadCSV('posts.csv', rows);
+  /** Fetch data for export (users, posts, or knowledge) */
+  const fetchDataForExport = async (type) => {
+    let data = [];
+    if (type === 'users') {
+      data = users.length > 0 ? users : (await api.get('/admin/users')).data;
+    } else if (type === 'posts') {
+      data = posts.length > 0 ? posts : (await api.get('/admin/posts')).data;
+    } else if (type === 'knowledge') {
+      data = knowledge.length > 0 ? knowledge : (await api.get('/admin/knowledge')).data;
+    }
+    return data;
   };
 
-  const exportKnowledge = () => {
-    const rows = knowledge.map(k => ({ id: k.id, title: k.title, category: k.category }));
-    if (rows.length === 0) return alert('No entries to export');
-    downloadCSV('knowledge.csv', rows);
+  /** Export users to CSV */
+  const exportUsersCSV = async () => {
+    setShowExportMenu(prev => ({ ...prev, users: false }));
+    setExporting(prev => ({ ...prev, users: true }));
+    try {
+      const dataToExport = await fetchDataForExport('users');
+      const rows = dataToExport.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role, active: u.isActive }));
+      if (rows.length === 0) {
+        alert('No users to export');
+        return;
+      }
+      downloadCSV('users.csv', rows);
+    } catch (error) {
+      alert('Failed to export users: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setExporting(prev => ({ ...prev, users: false }));
+    }
+  };
+
+  /** Export users to PDF */
+  const exportUsersPDF = async () => {
+    setShowExportMenu(prev => ({ ...prev, users: false }));
+    setExporting(prev => ({ ...prev, users: true }));
+    try {
+      const dataToExport = await fetchDataForExport('users');
+      const rows = dataToExport.map(u => ({ 
+        id: u.id, 
+        name: u.name || '', 
+        email: u.email || '', 
+        role: u.role || '', 
+        active: u.isActive ? 'Yes' : 'No' 
+      }));
+      if (rows.length === 0) {
+        alert('No users to export');
+        return;
+      }
+      const columns = ['id', 'name', 'email', 'role', 'active'];
+      downloadPDF('users.pdf', 'Users Export', rows, columns);
+    } catch (error) {
+      alert('Failed to export users: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setExporting(prev => ({ ...prev, users: false }));
+    }
+  };
+
+  /** Export posts to CSV */
+  const exportPostsCSV = async () => {
+    setShowExportMenu(prev => ({ ...prev, posts: false }));
+    setExporting(prev => ({ ...prev, posts: true }));
+    try {
+      const dataToExport = await fetchDataForExport('posts');
+      const rows = dataToExport.map(p => ({ id: p.id, title: p.title, type: p.type, approved: p.isApproved }));
+      if (rows.length === 0) {
+        alert('No posts to export');
+        return;
+      }
+      downloadCSV('posts.csv', rows);
+    } catch (error) {
+      alert('Failed to export posts: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setExporting(prev => ({ ...prev, posts: false }));
+    }
+  };
+
+  /** Export posts to PDF */
+  const exportPostsPDF = async () => {
+    setShowExportMenu(prev => ({ ...prev, posts: false }));
+    setExporting(prev => ({ ...prev, posts: true }));
+    try {
+      const dataToExport = await fetchDataForExport('posts');
+      const rows = dataToExport.map(p => ({ 
+        id: p.id, 
+        title: (p.title || '').substring(0, 50) + (p.title && p.title.length > 50 ? '...' : ''), 
+        type: p.type || '', 
+        approved: p.isApproved ? 'Yes' : 'No' 
+      }));
+      if (rows.length === 0) {
+        alert('No posts to export');
+        return;
+      }
+      const columns = ['id', 'title', 'type', 'approved'];
+      downloadPDF('posts.pdf', 'Posts Export', rows, columns);
+    } catch (error) {
+      alert('Failed to export posts: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setExporting(prev => ({ ...prev, posts: false }));
+    }
+  };
+
+  /** Export knowledge entries to CSV */
+  const exportKnowledgeCSV = async () => {
+    setShowExportMenu(prev => ({ ...prev, knowledge: false }));
+    setExporting(prev => ({ ...prev, knowledge: true }));
+    try {
+      const dataToExport = await fetchDataForExport('knowledge');
+      const rows = dataToExport.map(k => ({ id: k.id, title: k.title, category: k.category }));
+      if (rows.length === 0) {
+        alert('No entries to export');
+        return;
+      }
+      downloadCSV('knowledge.csv', rows);
+    } catch (error) {
+      alert('Failed to export knowledge entries: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setExporting(prev => ({ ...prev, knowledge: false }));
+    }
+  };
+
+  /** Export knowledge entries to PDF */
+  const exportKnowledgePDF = async () => {
+    setShowExportMenu(prev => ({ ...prev, knowledge: false }));
+    setExporting(prev => ({ ...prev, knowledge: true }));
+    try {
+      const dataToExport = await fetchDataForExport('knowledge');
+      const rows = dataToExport.map(k => ({ 
+        id: k.id, 
+        title: (k.title || '').substring(0, 50) + (k.title && k.title.length > 50 ? '...' : ''), 
+        category: k.category || '' 
+      }));
+      if (rows.length === 0) {
+        alert('No entries to export');
+        return;
+      }
+      const columns = ['id', 'title', 'category'];
+      downloadPDF('knowledge.pdf', 'Knowledge Base Export', rows, columns);
+    } catch (error) {
+      alert('Failed to export knowledge entries: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setExporting(prev => ({ ...prev, knowledge: false }));
+    }
+  };
+
+  /** Render export dropdown menu */
+  const renderExportDropdown = (type) => {
+    const isOpen = showExportMenu[type];
+    const isExporting = exporting[type];
+    const menuRef = exportMenuRefs[type];
+    
+    return (
+      <div className="export-dropdown" ref={menuRef}>
+        <button 
+          className="btn btn-outline export-btn" 
+          onClick={() => setShowExportMenu(prev => ({ ...prev, [type]: !prev[type] }))}
+          disabled={isExporting}
+        >
+          <FiDownload /> {isExporting ? 'Exporting...' : 'Export'} <FiChevronDown size={14} style={{ marginLeft: '4px' }} />
+        </button>
+        {isOpen && (
+          <div className="export-dropdown-menu">
+            <button 
+              className="export-dropdown-item" 
+              onClick={type === 'users' ? exportUsersCSV : type === 'posts' ? exportPostsCSV : exportKnowledgeCSV}
+            >
+              <FiFileText /> Export as CSV
+            </button>
+            <button 
+              className="export-dropdown-item" 
+              onClick={type === 'users' ? exportUsersPDF : type === 'posts' ? exportPostsPDF : exportKnowledgePDF}
+            >
+              <FiFileText /> Export as PDF
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const filteredUsers = useMemo(() => users.filter(u => 
@@ -285,10 +492,20 @@ const AdminPanel = ({ user }) => {
       <header className="admin-header">
         <h1><FiShield /> Admin Dashboard</h1>
         <div className="admin-header__actions">
-          <button type="button" className="admin-theme-btn" onClick={() => setDarkMode(d => !d)} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={darkMode ? 'Light mode' : 'Dark mode'}>
-            {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
-            <span className="admin-theme-btn__label">{darkMode ? 'Light' : 'Dark'}</span>
-          </button>
+          <div className="theme-toggle-wrapper">
+            <FiSun className="theme-toggle-icon theme-toggle-icon--sun" size={16} />
+            <button 
+              type="button" 
+              className={`theme-toggle ${darkMode ? 'theme-toggle--dark' : ''}`}
+              onClick={() => setDarkMode(d => !d)} 
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} 
+              aria-label={darkMode ? 'Light mode' : 'Dark mode'}
+              aria-pressed={darkMode}
+            >
+              <span className="theme-toggle__slider"></span>
+            </button>
+            <FiMoon className="theme-toggle-icon theme-toggle-icon--moon" size={16} />
+          </div>
         </div>
       </header>
 
@@ -395,7 +612,7 @@ const AdminPanel = ({ user }) => {
             <div className="chart-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3><FiBarChart2 /> Posts by Type</h3>
-                <button className="btn btn-outline" onClick={exportPosts}><FiDownload /> Export</button>
+                {renderExportDropdown('posts')}
               </div>
               <div className="chart-content">
                 {(stats.breakdown.postsByType || []).map((item, idx) => (
@@ -416,7 +633,7 @@ const AdminPanel = ({ user }) => {
             <div className="chart-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3><FiBarChart2 /> Users by Role</h3>
-                <button className="btn btn-outline" onClick={exportUsers}><FiDownload /> Export</button>
+                {renderExportDropdown('users')}
               </div>
               <div className="chart-content">
                 {(stats.breakdown.usersByRole || []).map((item, idx) => (
@@ -437,7 +654,7 @@ const AdminPanel = ({ user }) => {
             <div className="chart-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3><FiBarChart2 /> Top Knowledge Categories</h3>
-                <button className="btn btn-outline" onClick={exportKnowledge}><FiDownload /> Export</button>
+                {renderExportDropdown('knowledge')}
               </div>
               <div className="chart-content">
                 {(stats.breakdown.knowledgeByCategory || []).slice(0, 5).map((item, idx) => (
@@ -497,7 +714,7 @@ const AdminPanel = ({ user }) => {
               <button className="btn btn-primary" onClick={() => { setShowUserModal(true); setFormData({}); setEditingItem(null); }}>
                 <FiPlus /> Add User
               </button>
-              <button className="btn btn-outline" onClick={exportUsers}><FiDownload /> Export</button>
+              {renderExportDropdown('users')}
             </div>
           </div>
 
@@ -615,7 +832,7 @@ const AdminPanel = ({ user }) => {
               <button className="btn btn-outline" onClick={() => { setShowKnowledgeModal(true); setFormData({}); setEditingItem(null); }}>
                 <FiPlus /> Add Entry
               </button>
-              <button className="btn btn-outline" onClick={exportKnowledge}><FiDownload /> Export</button>
+              {renderExportDropdown('knowledge')}
             </div>
           </div>
 
