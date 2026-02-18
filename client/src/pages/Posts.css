@@ -64,6 +64,13 @@
   box-shadow: var(--shadow-md);
 }
 
+@media (max-width: 768px) {
+  .post-card {
+    border-radius: var(--radius-xl);
+    padding: 20px;
+  }
+}
+
 .post-card-header {
   display: flex;
   justify-content: space-between;

@@ -54,6 +54,12 @@ function App() {
     <Router>
       <div className="App">
         {user && <Navbar user={user} onLogout={handleLogout} />}
+        {user && (
+          <header className="app-mobile-header" aria-hidden="true">
+            <span className="app-mobile-header__title">🐔 Appah Farms</span>
+          </header>
+        )}
+        <main className="App__main">
         <Routes>
           <Route 
             path="/login" 
@@ -86,7 +92,7 @@ function App() {
           />
           <Route 
             path="/profile" 
-            element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />} 
+            element={user ? <Profile user={user} setUser={setUser} onLogout={handleLogout} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/admin" 
@@ -97,6 +103,7 @@ function App() {
             element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
           />
         </Routes>
+        </main>
         {user && <MobileBar user={user} />}
       </div>
     </Router>

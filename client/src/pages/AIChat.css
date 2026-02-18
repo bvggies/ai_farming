@@ -1,5 +1,19 @@
 .ai-chat-page {
   padding-bottom: 24px;
+  padding-left: max(16px, var(--safe-left));
+  padding-right: max(16px, var(--safe-right));
+}
+
+@media (max-width: 768px) {
+  .ai-chat-page {
+    padding-bottom: 16px;
+  }
+
+  .ai-chat-card {
+    border-radius: var(--radius-xl);
+    height: calc(100vh - 180px);
+    min-height: 400px;
+  }
 }
 
 .ai-chat-page .page-title {

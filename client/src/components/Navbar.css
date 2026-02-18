@@ -67,12 +67,15 @@
   font-weight: 600;
 }
 
-/* Mobile improvements */
+/* Hide full navbar on mobile – use bottom tab bar only */
 @media (max-width: 768px) {
   .navbar {
-    padding: 10px 0;
+    display: none !important;
   }
-  
+}
+
+/* Tablet and small desktop */
+@media (min-width: 769px) and (max-width: 1024px) {
   .navbar__container {
     padding: 0 12px;
     gap: 8px;

@@ -261,14 +261,15 @@ const AdminPanel = ({ user }) => {
 
   return (
     <div className={`admin-panel${darkMode ? ' admin-panel-dark' : ''}`}>
-      <div className="admin-header">
+      <header className="admin-header">
         <h1><FiShield /> Admin Dashboard</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button className="btn btn-outline" onClick={() => setDarkMode(d => !d)} title="Toggle theme">
-            {darkMode ? <FiSun /> : <FiMoon />} {darkMode ? 'Light' : 'Dark'}
+        <div className="admin-header__actions">
+          <button type="button" className="admin-theme-btn" onClick={() => setDarkMode(d => !d)} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={darkMode ? 'Light mode' : 'Dark mode'}>
+            {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+            <span className="admin-theme-btn__label">{darkMode ? 'Light' : 'Dark'}</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {stats && (
         <div className="dashboard-overview">
@@ -412,34 +413,36 @@ const AdminPanel = ({ user }) => {
         </div>
       )}
 
-      <div className="admin-tabs">
-        <button
-          className={activeTab === 'dashboard' ? 'tab-active' : ''}
-          onClick={() => setActiveTab('dashboard')}
-        >
-          <FiBarChart2 /> Dashboard
-        </button>
-        <button
-          className={activeTab === 'users' ? 'tab-active' : ''}
-          onClick={() => setActiveTab('users')}
-        >
-          <FiUsers /> Users
-        </button>
-        <button
-          className={activeTab === 'posts' ? 'tab-active' : ''}
-          onClick={() => setActiveTab('posts')}
-        >
-          <FiFileText /> Posts
-        </button>
-        <button
-          className={activeTab === 'knowledge' ? 'tab-active' : ''}
-          onClick={() => setActiveTab('knowledge')}
-        >
-          <FiBook /> Knowledge Base
-        </button>
-        <button onClick={fetchStats} className="refresh-btn">
-          <FiRefreshCw /> Refresh
-        </button>
+      <div className="admin-tabs-wrap">
+        <div className="admin-tabs">
+          <button
+            className={activeTab === 'dashboard' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            <FiBarChart2 /> Dashboard
+          </button>
+          <button
+            className={activeTab === 'users' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('users')}
+          >
+            <FiUsers /> Users
+          </button>
+          <button
+            className={activeTab === 'posts' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('posts')}
+          >
+            <FiFileText /> Posts
+          </button>
+          <button
+            className={activeTab === 'knowledge' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('knowledge')}
+          >
+            <FiBook /> Knowledge
+          </button>
+          <button onClick={fetchStats} className="admin-tabs__refresh" title="Refresh stats">
+            <FiRefreshCw /> Refresh
+          </button>
+        </div>
       </div>
 
       {(activeTab !== 'dashboard') && (
@@ -460,7 +463,7 @@ const AdminPanel = ({ user }) => {
         <div className="content-section">
           <div className="section-header">
             <h2>User Management</h2>
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div className="section-header__actions">
               <button className="btn btn-primary" onClick={() => { setShowUserModal(true); setFormData({}); setEditingItem(null); }}>
                 <FiPlus /> Add User
               </button>
@@ -482,19 +485,19 @@ const AdminPanel = ({ user }) => {
               <tbody>
                 {filteredUsers.map(userItem => (
                   <tr key={userItem.id}>
-                    <td>{userItem.name}</td>
-                    <td>{userItem.email}</td>
-                    <td>
+                    <td data-label="Name">{userItem.name}</td>
+                    <td data-label="Email">{userItem.email}</td>
+                    <td data-label="Role">
                       <span className={`badge badge-${userItem.role === 'admin' ? 'danger' : userItem.role === 'manager' ? 'info' : userItem.role === 'supervisor' ? 'warning' : 'primary'}`}>
                         {userItem.role === 'admin' ? 'Admin' : userItem.role === 'manager' ? 'Manager' : userItem.role === 'supervisor' ? 'Supervisor' : 'Worker'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <span className={`badge badge-${userItem.isActive ? 'success' : 'warning'}`}>
                         {userItem.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       <div className="action-buttons">
                         <select
                           value={userItem.role}
@@ -529,9 +532,9 @@ const AdminPanel = ({ user }) => {
         <div className="content-section">
           <div className="section-header">
             <h2>Post Management</h2>
-            <div className="filter-buttons" style={{ display: 'flex', gap: '10px' }}>
+            <div className="section-header__actions">
               <button className="btn btn-outline" onClick={() => setSearchTerm('')}>
-                <FiFilter /> Clear Filter
+                <FiFilter /> Clear
               </button>
               <button className="btn btn-primary" onClick={() => setShowPostModal(true)}>
                 <FiPlus /> Add Post
@@ -569,9 +572,9 @@ const AdminPanel = ({ user }) => {
       {activeTab === 'knowledge' && !loading && (
         <div className="content-section">
           <div className="section-header">
-            <h2>Knowledge Base Management</h2>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <select value={knowledgeFilter} onChange={(e) => setKnowledgeFilter(e.target.value)}>
+            <h2>Knowledge Base</h2>
+            <div className="section-header__actions section-header__actions--wrap">
+              <select className="admin-select" value={knowledgeFilter} onChange={(e) => setKnowledgeFilter(e.target.value)} aria-label="Filter by category">
                 <option value="all">All</option>
                 <option value="faq">FAQs</option>
                 <option value="other">Other</option>

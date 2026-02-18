@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { FiUser, FiMail, FiShield, FiCalendar, FiEdit3, FiSave, FiX, FiSettings, FiGlobe } from 'react-icons/fi';
+import { FiUser, FiMail, FiShield, FiCalendar, FiEdit3, FiSave, FiX, FiSettings, FiGlobe, FiLogOut } from 'react-icons/fi';
 import { authService } from '../services/authService';
 import './Profile.css';
 
-const Profile = ({ user, setUser }) => {
+const Profile = ({ user, setUser, onLogout }) => {
   const [formData, setFormData] = useState({
     name: user.name || '',
     preferredLanguage: user.preferredLanguage || 'en'
@@ -257,6 +257,15 @@ const Profile = ({ user, setUser }) => {
             </div>
           </div>
         </div>
+
+        {/* Sign out - especially for mobile where navbar is hidden */}
+        {onLogout && (
+          <div className="profile-section-card profile-logout-section">
+            <button type="button" className="profile-logout-btn" onClick={onLogout}>
+              <FiLogOut size={20} /> Sign out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
 import { authService } from '../services/authService';
 import './Login.css';
 
@@ -9,6 +10,7 @@ const Login = ({ onLogin }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -28,46 +30,75 @@ const Login = ({ onLogin }) => {
 
   return (
     <div className="login-page">
+      <div className="login-bg-shape login-bg-shape--1" aria-hidden="true" />
+      <div className="login-bg-shape login-bg-shape--2" aria-hidden="true" />
+
       <div className="login-card">
-        <h1>🐔 Appah Farms Knowledge Hub</h1>
-        <p className="login-subtitle">Sign in to your account</p>
+        <div className="login-card__header">
+          <div className="login-card__logo">
+            <span className="login-card__logo-icon">🐔</span>
+          </div>
+          <h1 className="login-card__title">Appah Farms</h1>
+          <p className="login-card__subtitle">Knowledge Hub</p>
+        </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        <form onSubmit={handleSubmit} className="login-form">
+          {error && (
+            <div className="login-error" role="alert">
+              <span className="login-error__text">{error}</span>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Enter your email"
-              autoComplete="email"
-            />
+          <div className="login-field">
+            <label htmlFor="login-email" className="login-field__label">Email</label>
+            <div className="login-field__input-wrap">
+              <FiMail className="login-field__icon" aria-hidden="true" />
+              <input
+                id="login-email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+                className="login-field__input"
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
+          <div className="login-field">
+            <label htmlFor="login-password" className="login-field__label">Password</label>
+            <div className="login-field__input-wrap">
+              <FiLock className="login-field__icon" aria-hidden="true" />
+              <input
+                id="login-password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="login-field__input"
+              />
+            </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <button type="submit" className="login-submit" disabled={loading}>
+            {loading ? (
+              <span className="login-submit__spinner" aria-hidden="true" />
+            ) : (
+              <>
+                <FiLogIn className="login-submit__icon" aria-hidden="true" />
+                Sign in
+              </>
+            )}
           </button>
         </form>
 
         <p className="login-footer">
-          Appah Farm workers, managers & supervisors only. Contact your administrator for an account.
+          For Appah Farm workers, managers & supervisors. Contact your administrator for access.
         </p>
       </div>
     </div>

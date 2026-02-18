@@ -1,5 +1,48 @@
 .App {
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.App__main {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Mobile-only: compact top bar (replaces full navbar) */
+.app-mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 16px;
+  padding-top: var(--safe-top, 0);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 800;
+}
+
+.app-mobile-header__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 768px) {
+  .app-mobile-header {
+    display: flex;
+  }
+}
+
+@media (min-width: 769px) {
+  .app-mobile-header {
+    display: none !important;
+  }
 }
 
 .loading {
@@ -31,6 +74,14 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 20px;
+  padding-left: max(20px, var(--safe-left));
+  padding-right: max(20px, var(--safe-right));
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px max(16px, var(--safe-left)) 24px max(16px, var(--safe-right));
+  }
 }
 
 .page-header {
@@ -64,6 +115,7 @@
 
 .btn {
   padding: 10px 20px;
+  min-height: 44px;
   border: none;
   border-radius: var(--radius-sm);
   font-size: 1rem;
@@ -72,6 +124,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .btn {
+    border-radius: var(--radius-md);
+    min-height: 48px;
+    padding: 12px 20px;
+  }
 }
 
 .btn-primary {

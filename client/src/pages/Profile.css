@@ -147,6 +147,32 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
+.profile-logout-section {
+  margin-top: 8px;
+}
+
+.profile-logout-btn {
+  width: 100%;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.profile-logout-btn:hover {
+  background: #fee2e2;
+  transform: translateY(-1px);
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
