@@ -239,7 +239,8 @@ const AdminPanel = ({ user }) => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // exportMenuRefs is stable and doesn't need to be in deps
 
   // CSV export helpers
   const downloadCSV = (filename, rows) => {
