@@ -1,3 +1,8 @@
+/**
+ * Backend server entry point (Express).
+ * Mounts all API routes under /api (auth, users, posts, AI, knowledge, notifications, admin).
+ * Uses Prisma for the database; JWT for authentication.
+ */
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -5,13 +10,13 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
+// Allow frontend to call this API from another origin; parse JSON and form bodies
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+// API route modules: each handles a group of endpoints (e.g. /api/auth/login, /api/posts)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/posts', require('./routes/posts'));
@@ -20,7 +25,7 @@ app.use('/api/knowledge', require('./routes/knowledge'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', require('./routes/admin'));
 
-// Health check
+// Simple health check so deployers can verify the server is up
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Appah Farms Knowledge Hub API is running' });
 });

@@ -1,3 +1,8 @@
+/**
+ * Serverless registration endpoint (e.g. Vercel serverless).
+ * Creates a new user with role 'worker' in the database and returns a JWT and user object.
+ * Expects POST body: name, email, password (min 6 chars); optional: farmSize, poultryType, preferredLanguage.
+ */
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { getSql } = require('../_db');
@@ -9,7 +14,7 @@ module.exports = async (req, res) => {
 
   try {
     const { name, email, password, farmSize = '', poultryType = '', preferredLanguage = 'en' } = req.body || {};
-    
+
     if (!name || !email || !password || password.length < 6) {
       return res.status(400).json({ 
         message: 'Invalid input. Name, email, and password (min 6 chars) are required.',

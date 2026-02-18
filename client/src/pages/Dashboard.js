@@ -1,3 +1,8 @@
+/**
+ * Dashboard page: the main home screen after login.
+ * Shows overview (stats, quick actions, reminders, recent posts) and an Activity tab
+ * (feeding schedules, farm logs, analytics). Data is fetched on load and refreshed every minute.
+ */
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -9,6 +14,7 @@ import api from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = ({ user }) => {
+  // Overview: recent posts, reminders, and summary stats
   const [recentPosts, setRecentPosts] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [stats, setStats] = useState(null);
@@ -21,7 +27,8 @@ const Dashboard = ({ user }) => {
     reminderTime: '08:00'
   });
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | activity
+  // Activity tab: feeding schedules, farm logs, and analytics
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'activity'
   const [feedingSchedules, setFeedingSchedules] = useState([]);
   const [farmLogs, setFarmLogs] = useState([]);
   const [feedingForm, setFeedingForm] = useState({ timeOfDay: '08:00', feedType: '', rationGrams: 0, notes: '' });
@@ -29,12 +36,14 @@ const Dashboard = ({ user }) => {
   const [activityAnalytics, setActivityAnalytics] = useState(null);
   const [activityHistory, setActivityHistory] = useState([]);
 
+  // Load dashboard data on mount and refresh every 60 seconds
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 60000); // Refresh every minute
+    const interval = setInterval(fetchDashboardData, 60000);
     return () => clearInterval(interval);
   }, []);
 
+  /** Fetches posts, reminders, and activity data in parallel and updates state + stats */
   const fetchDashboardData = async () => {
     try {
       const [postsRes, remindersRes, activityRes] = await Promise.all([
@@ -67,6 +76,7 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  /** Create a new reminder (vaccination, feeding, etc.) and refresh the list */
   const handleCreateReminder = async (e) => {
     e.preventDefault();
     try {
@@ -85,6 +95,7 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  /** Mark a reminder as completed and refresh dashboard data */
   const handleCompleteReminder = async (reminderId) => {
     try {
       await api.put('/reminders/update', { reminderId, isCompleted: true });
@@ -94,6 +105,7 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  /** Delete a reminder after confirmation and refresh dashboard data */
   const handleDeleteReminder = async (reminderId) => {
     if (!window.confirm('Delete this reminder?')) return;
     try {
@@ -104,6 +116,7 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  /** Returns up to 5 upcoming reminders (today or future), not completed, sorted by date */
   const getUpcomingReminders = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -117,6 +130,7 @@ const Dashboard = ({ user }) => {
       .slice(0, 5);
   };
 
+  /** Submit new feeding schedule and refresh activity data */
   const handleAddFeedingSchedule = async (e) => {
     e.preventDefault();
     try {
@@ -128,6 +142,7 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  /** Submit new farm log (birds, feed, mortality) and refresh activity data */
   const handleAddFarmLog = async (e) => {
     e.preventDefault();
     try {

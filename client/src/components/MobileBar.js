@@ -1,3 +1,7 @@
+/**
+ * Bottom tab bar for mobile: shows Home, Posts, AI, Knowledge, Profile (and Admin if admin).
+ * Only visible on small screens (e.g. max-width 768px); Navbar is hidden then.
+ */
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { FiHome, FiMessageSquare, FiBook, FiUser, FiMessageCircle, FiShield } from 'react-icons/fi';
@@ -6,6 +10,7 @@ import './MobileBar.css';
 const MobileBar = ({ user }) => {
   const location = useLocation();
 
+  // Same destinations as Navbar; Admin inserted before Profile for admin users
   const tabs = [
     { to: '/dashboard', icon: FiHome, label: 'Home' },
     { to: '/posts', icon: FiMessageSquare, label: 'Posts' },

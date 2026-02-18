@@ -1,3 +1,7 @@
+/**
+ * Auth routes: register, login, and get current user.
+ * Register and login return { token, user }; /me requires a valid JWT and returns the user.
+ */
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
@@ -6,7 +10,7 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Register
+// POST /api/auth/register — create a new user (worker by default), return token + user
 router.post('/register', [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
@@ -19,6 +23,9 @@ router.post('/register', [
     }
 
     const { name, email, password, farmSize, poultryType, preferredLanguage } = req.body;
+
+    // Preferred language: only English (en) or Twi (tw)
+    const lang = preferredLanguage === 'tw' ? 'tw' : 'en';
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -34,7 +41,7 @@ router.post('/register', [
         password: hashed,
         farmSize: farmSize || '',
         poultryType: poultryType || '',
-        preferredLanguage: preferredLanguage || 'en'
+        preferredLanguage: lang
       }
     });
 
@@ -61,7 +68,7 @@ router.post('/register', [
   }
 });
 
-// Login
+// POST /api/auth/login — validate email/password, return token + user
 router.post('/login', [
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required')
@@ -112,7 +119,7 @@ router.post('/login', [
   }
 });
 
-// Get current user
+// GET /api/auth/me — return the currently logged-in user (requires valid token)
 router.get('/me', auth, async (req, res) => {
   res.json({
     user: {

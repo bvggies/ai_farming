@@ -1,10 +1,14 @@
+/**
+ * Knowledge base routes: list, search, get by ID; create/update/delete require admin.
+ * Used by the Knowledge Base page (read) and Admin panel (manage).
+ */
 const express = require('express');
 const prisma = require('../prismaClient');
 const { auth, adminAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Search knowledge base
+// GET /api/knowledge/search — search by query and optional category (public)
 router.get('/search', async (req, res) => {
   try {
     const { q, category } = req.query;

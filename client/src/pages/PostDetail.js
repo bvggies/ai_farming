@@ -1,15 +1,23 @@
+/**
+ * Post detail page: shows one post by ID (from the URL), with like button and comments.
+ * Users can like the post and add comments; the post data is refetched after each action.
+ */
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FiHeart, FiArrowLeft } from 'react-icons/fi';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FiHeart, FiArrowLeft, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import api from '../services/api';
 
 const PostDetail = ({ user }) => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  // Post data, new comment text, loading/submitting/deleting states
   const [post, setPost] = useState(null);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
+  /** Load this post and its comments from the API */
   const fetchPost = React.useCallback(async () => {
     try {
       const response = await api.get(`/posts/${id}`);
@@ -25,6 +33,7 @@ const PostDetail = ({ user }) => {
     fetchPost();
   }, [fetchPost]);
 
+  /** Toggle like on this post and refresh post data from API */
   const handleLike = async () => {
     try {
       const response = await api.post(`/posts/${id}/like`);
@@ -34,6 +43,7 @@ const PostDetail = ({ user }) => {
     }
   };
 
+  /** Submit a new comment and refresh post data (including comments) from API */
   const handleComment = async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
@@ -50,6 +60,23 @@ const PostDetail = ({ user }) => {
     }
   };
 
+  /** Delete this post (author only); confirm first, then redirect to posts list */
+  const handleDelete = async () => {
+    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/posts/${id}`);
+      navigate('/posts');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert(error.response?.data?.message || 'Failed to delete post');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const isAuthor = user?.id && post?.authorId === user.id;
+
   if (loading) {
     return <div className="container"><div className="loading">Loading post...</div></div>;
   }
@@ -58,13 +85,25 @@ const PostDetail = ({ user }) => {
     return <div className="container"><div className="alert alert-error">Post not found</div></div>;
   }
 
-  const isLiked = post.likes?.some(like => like._id === user.id || like === user.id);
+  const isLiked = post.likes?.some(like => like.userId === user?.id);
 
   return (
     <div className="container">
-      <Link to="/posts" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: '#4CAF50', textDecoration: 'none' }}>
-        <FiArrowLeft /> Back to Posts
-      </Link>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '20px' }}>
+        <Link to="/posts" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#4CAF50', textDecoration: 'none' }}>
+          <FiArrowLeft /> Back to Posts
+        </Link>
+        {isAuthor && (
+          <span style={{ display: 'flex', gap: '8px' }}>
+            <Link to={`/posts/${id}/edit`} className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <FiEdit2 /> Edit
+            </Link>
+            <button type="button" className="btn btn-outline" onClick={handleDelete} disabled={deleting} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#c62828', borderColor: '#c62828' }}>
+              <FiTrash2 /> {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+          </span>
+        )}
+      </div>
 
       <div className="card">
         <div style={postHeaderStyle}>
@@ -79,14 +118,18 @@ const PostDetail = ({ user }) => {
 
         {post.images && post.images.length > 0 && (
           <div style={imagesStyle}>
-            {post.images.map((img, idx) => (
-              <img
-                key={idx}
-                src={`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${img}`}
-                alt={`Post ${idx + 1}`}
-                style={imageStyle}
-              />
-            ))}
+            {post.images.map((img, idx) => {
+              const src = typeof img === 'string' ? img : (img?.url || img);
+              const url = src?.startsWith('http') ? src : `${(process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}${src?.startsWith('/') ? '' : '/'}${src || ''}`;
+              return (
+                <img
+                  key={img?.id || idx}
+                  src={url}
+                  alt={`Post ${idx + 1}`}
+                  style={imageStyle}
+                />
+              );
+            })}
           </div>
         )}
 

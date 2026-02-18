@@ -1,3 +1,7 @@
+/**
+ * Registration page: lets new Appah Farm workers create an account.
+ * Collects name, email, password, and preferred language; on success calls onLogin so user is logged in.
+ */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiGlobe } from 'react-icons/fi';
@@ -5,6 +9,7 @@ import { authService } from '../services/authService';
 import './Register.css';
 
 const Register = ({ onLogin }) => {
+  // Form fields and UI state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,11 +19,13 @@ const Register = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  /** Update a form field when user types; clear any previous error message */
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError('');
   };
 
+  /** Submit registration: send data to API, then log user in with returned token and user */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -123,9 +130,6 @@ const Register = ({ onLogin }) => {
               >
                 <option value="en">English</option>
                 <option value="tw">Twi</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="sw">Swahili</option>
               </select>
             </div>
           </div>

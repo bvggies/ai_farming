@@ -1,6 +1,9 @@
+/**
+ * Shared Prisma client for database access.
+ * In development we reuse one instance (global.prisma) to avoid too many connections during hot reload.
+ */
 const { PrismaClient } = require('@prisma/client');
 
-// Ensure single Prisma instance in dev
 let prisma;
 
 if (process.env.NODE_ENV === 'production') {

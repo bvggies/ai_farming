@@ -1,10 +1,14 @@
+/**
+ * Admin routes: stats, users list/update/delete, posts list/approve, knowledge list/CRUD.
+ * Every route requires adminAuth (valid JWT + role === 'admin').
+ */
 const express = require('express');
 const prisma = require('../prismaClient');
 const { adminAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all users
+// GET /api/admin/users — list all users (admin only)
 router.get('/users', adminAuth, async (req, res) => {
   try {
     const users = await prisma.user.findMany({
@@ -129,24 +133,61 @@ router.delete('/posts/:id', adminAuth, async (req, res) => {
   }
 });
 
-// Get dashboard stats
+// Get dashboard stats (overview + breakdown for charts)
 router.get('/stats', adminAuth, async (req, res) => {
   try {
-    const [totalUsers, totalPosts, totalKnowledge, activeUsers, approvedPosts] = await Promise.all([
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    let totalNotifications = 0;
+    try {
+      totalNotifications = await prisma.notification.count();
+    } catch (_) {
+      // Notification table may not exist in some deployments
+    }
+
+    const [
+      totalUsers,
+      totalPosts,
+      totalKnowledge,
+      activeUsers,
+      approvedPosts,
+      newUsersLast7Days,
+      pendingPosts,
+      postsByTypeRows,
+      usersByRoleRows,
+      knowledgeByCategoryRows
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.post.count(),
       prisma.knowledgeBase.count(),
       prisma.user.count({ where: { isActive: true } }),
-      prisma.post.count({ where: { isApproved: true } })
+      prisma.post.count({ where: { isApproved: true } }),
+      prisma.user.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.post.count({ where: { isApproved: false } }),
+      prisma.post.groupBy({ by: ['type'], _count: { type: true } }),
+      prisma.user.groupBy({ by: ['role'], _count: { role: true } }),
+      prisma.knowledgeBase.groupBy({ by: ['category'], _count: { category: true } })
     ]);
 
-    res.json({
+    const overview = {
       totalUsers,
       activeUsers,
       totalPosts,
       approvedPosts,
-      totalKnowledge
-    });
+      totalKnowledge,
+      newUsersLast7Days,
+      pendingPosts,
+      totalNotifications
+    };
+
+    const breakdown = {
+      postsByType: postsByTypeRows.map((row) => ({ type: row.type, count: row._count.type })),
+      usersByRole: usersByRoleRows.map((row) => ({ role: row.role, count: row._count.role })),
+      knowledgeByCategory: knowledgeByCategoryRows.map((row) => ({ category: row.category || 'general', count: row._count.category }))
+    };
+
+    res.json({ overview, breakdown });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

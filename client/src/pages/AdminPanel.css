@@ -428,6 +428,20 @@
   font-size: 18px;
 }
 
+.admin-stats-error {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--muted);
+}
+
+.admin-stats-error p {
+  margin: 0 0 16px 0;
+}
+
+.admin-stats-error .btn {
+  min-height: 44px;
+}
+
 .content-section {
   animation: fadeIn 0.5s;
 }

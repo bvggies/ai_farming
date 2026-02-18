@@ -1,3 +1,7 @@
+/**
+ * User routes: update current user profile (name, language, etc.).
+ * All routes require auth. Used by the Profile page.
+ */
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const prisma = require('../prismaClient');
@@ -5,7 +9,7 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Update profile
+// PUT /api/users/profile — update the logged-in user's profile
 router.put('/profile', auth, [
   body('name').optional().trim().notEmpty(),
   body('farmSize').optional().trim(),
@@ -24,7 +28,8 @@ router.put('/profile', auth, [
     if (name) updates.name = name;
     if (farmSize !== undefined) updates.farmSize = farmSize;
     if (poultryType !== undefined) updates.poultryType = poultryType;
-    if (preferredLanguage !== undefined) updates.preferredLanguage = preferredLanguage;
+    // Preferred language: only English (en) or Twi (tw)
+    if (preferredLanguage !== undefined) updates.preferredLanguage = preferredLanguage === 'tw' ? 'tw' : 'en';
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
@@ -56,7 +61,7 @@ router.put('/profile', auth, [
   }
 });
 
-// Get user profile
+// GET /api/users/profile — get current user's profile (auth required)
 router.get('/profile', auth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({

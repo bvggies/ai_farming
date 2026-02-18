@@ -1,3 +1,7 @@
+/**
+ * Login page: lets existing users sign in with email and password.
+ * On success it calls onLogin(user, token) so the App can store the token and switch to the dashboard.
+ */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
@@ -5,15 +9,18 @@ import { authService } from '../services/authService';
 import './Login.css';
 
 const Login = ({ onLogin }) => {
+  // Form values and UI state
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  /** Update form field when user types; clear any previous error */
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError('');
   };
 
+  /** Submit login: call auth API, then call onLogin with user + token, or show error */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

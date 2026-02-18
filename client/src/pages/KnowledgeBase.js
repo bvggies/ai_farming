@@ -1,9 +1,14 @@
+/**
+ * Knowledge Base page: browse and search FAQs and other knowledge entries.
+ * Supports search; clicking an entry shows full content; FAQs can expand/collapse and track view count.
+ */
 import React, { useState, useEffect } from 'react';
 import { FiSearch, FiBookOpen, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import api from '../services/api';
 import './KnowledgeBase.css';
 
 const KnowledgeBase = ({ user }) => {
+  // Entries list, search input, loading, selected entry for detail view, expanded FAQ IDs
   const [entries, setEntries] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -14,6 +19,7 @@ const KnowledgeBase = ({ user }) => {
     fetchEntries();
   }, []);
 
+  /** Fetch knowledge entries from API; if query is provided, use search endpoint */
   const fetchEntries = async (query = '') => {
     try {
       setLoading(true);
@@ -27,11 +33,13 @@ const KnowledgeBase = ({ user }) => {
     }
   };
 
+  /** Run search with current searchQuery when user submits the search form */
   const handleSearch = (e) => {
     e.preventDefault();
     fetchEntries(searchQuery);
   };
 
+  /** Open a single entry in detail view; fetch full entry by ID */
   const handleEntryClick = async (entryId) => {
     try {
       const response = await api.get(`/knowledge?id=${entryId}`);
@@ -41,6 +49,7 @@ const KnowledgeBase = ({ user }) => {
     }
   };
 
+  /** Expand or collapse an FAQ row; when expanding, increment view count via API */
   const toggleFaq = async (entryId) => {
     const newExpanded = new Set(expandedFaqs);
     if (newExpanded.has(entryId)) {

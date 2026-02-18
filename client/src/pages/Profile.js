@@ -1,22 +1,31 @@
+/**
+ * Profile page: show current user info (name, email, role, language) and allow editing name and language.
+ * Includes a Sign out button (useful on mobile where the top navbar is hidden).
+ */
 import React, { useState } from 'react';
 import { FiUser, FiMail, FiShield, FiCalendar, FiEdit3, FiSave, FiX, FiSettings, FiGlobe, FiLogOut } from 'react-icons/fi';
 import { authService } from '../services/authService';
 import './Profile.css';
 
 const Profile = ({ user, setUser, onLogout }) => {
+  // Editable fields (name, language); form state and messages
+  // Preferred language is only English or Twi
+  const normLang = (code) => (code === 'tw' ? 'tw' : 'en');
   const [formData, setFormData] = useState({
     name: user.name || '',
-    preferredLanguage: user.preferredLanguage || 'en'
+    preferredLanguage: normLang(user.preferredLanguage)
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  /** Update form field when user types (name or preferred language) */
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /** Save profile changes to the API and update App's user state */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -36,16 +45,18 @@ const Profile = ({ user, setUser, onLogout }) => {
     }
   };
 
+  /** Revert form to current user data and exit edit mode */
   const handleCancel = () => {
     setFormData({
       name: user.name || '',
-      preferredLanguage: user.preferredLanguage || 'en'
+      preferredLanguage: normLang(user.preferredLanguage)
     });
     setIsEditing(false);
     setError('');
     setSuccess('');
   };
 
+  /** Return a color for the role badge (admin, manager, supervisor, worker) */
   const getRoleBadgeColor = (role) => {
     if (role === 'admin') return '#f59e0b';
     if (role === 'manager') return '#0891b2';
@@ -53,6 +64,7 @@ const Profile = ({ user, setUser, onLogout }) => {
     return '#4CAF50'; // worker
   };
 
+  /** Return display label for role (e.g. Administrator, Worker) */
   const getRoleLabel = (role) => {
     if (role === 'admin') return 'Administrator';
     if (role === 'manager') return 'Manager';
@@ -61,17 +73,13 @@ const Profile = ({ user, setUser, onLogout }) => {
     return 'Worker';
   };
 
+  /** Map language code (en/tw) to display name */
   const getLanguageName = (code) => {
-    const languages = {
-      en: 'English',
-      tw: 'Twi',
-      es: 'Spanish',
-      fr: 'French',
-      sw: 'Swahili'
-    };
+    const languages = { en: 'English', tw: 'Twi' };
     return languages[code] || code;
   };
 
+  /** Get initials from name (e.g. "John Doe" -> "JD") for avatar */
   const getInitials = (name) => {
     if (!name) return 'U';
     const parts = name.trim().split(' ');
@@ -186,15 +194,12 @@ const Profile = ({ user, setUser, onLogout }) => {
                 <select
                   id="preferredLanguage"
                   name="preferredLanguage"
-                  value={formData.preferredLanguage}
+                  value={formData.preferredLanguage === 'tw' ? 'tw' : 'en'}
                   onChange={handleChange}
                   className="form-input-modern"
                 >
                   <option value="en">English</option>
                   <option value="tw">Twi</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                  <option value="sw">Swahili</option>
                 </select>
               </div>
 

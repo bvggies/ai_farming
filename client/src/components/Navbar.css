@@ -57,6 +57,28 @@
 
 .navbar__label { line-height: 1; }
 
+.navbar__notifications-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar__badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  background: #ff5722;
+  color: #fff;
+  border-radius: 9px;
+}
+
 .navbar__logout {
   background-color: rgba(255,255,255,0.2);
   color: #fff;

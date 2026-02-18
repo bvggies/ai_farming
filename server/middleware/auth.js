@@ -1,17 +1,23 @@
+/**
+ * Auth middleware: protect routes by requiring a valid JWT.
+ * - auth: reads Bearer token, verifies it, loads user from DB, attaches req.user (without password).
+ * - adminAuth: same as auth but also requires req.user.role === 'admin'.
+ */
 const jwt = require('jsonwebtoken');
 const prisma = require('../prismaClient');
 
+/** Require a valid JWT in Authorization header; set req.user to the logged-in user (without password) */
 const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
     const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    
+
     if (!user || !user.isActive) {
       return res.status(401).json({ message: 'User not found or inactive' });
     }
@@ -24,6 +30,7 @@ const auth = async (req, res, next) => {
   }
 };
 
+/** Require auth and that the user has role 'admin' */
 const adminAuth = async (req, res, next) => {
   try {
     await auth(req, res, () => {});

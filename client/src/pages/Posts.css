@@ -14,6 +14,33 @@
   margin: 0;
 }
 
+.posts-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+.posts-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+.posts-search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 14px 10px 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background: var(--color-surface);
+}
+.posts-search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+}
+
 .posts-filters {
   display: flex;
   flex-wrap: wrap;

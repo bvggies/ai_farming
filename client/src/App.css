@@ -1,3 +1,6 @@
+/**
+ * Main App layout and shared UI: root container, mobile header, loading spinner, cards, buttons, forms.
+ */
 .App {
   min-height: 100vh;
   min-height: 100dvh;
@@ -14,7 +17,7 @@
 .app-mobile-header {
   display: none;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   height: 52px;
   min-height: 52px;
   padding: 0 16px;
@@ -32,6 +35,16 @@
   font-weight: 700;
   letter-spacing: -0.02em;
 }
+
+.app-mobile-header__bell {
+  color: #fff;
+  font-size: 1.25rem;
+  text-decoration: none;
+  padding: 8px;
+  border-radius: 8px;
+  line-height: 1;
+}
+.app-mobile-header__bell:hover { opacity: 0.9; }
 
 @media (max-width: 768px) {
   .app-mobile-header {

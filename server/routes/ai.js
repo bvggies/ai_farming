@@ -1,3 +1,8 @@
+/**
+ * AI routes: chat (text) and transcribe (audio).
+ * Chat sends the user message + context to OpenAI and returns the assistant reply.
+ * Transcribe converts audio to text (e.g. for voice input in the chat).
+ */
 const express = require('express');
 const KnowledgeBase = require('../models/KnowledgeBase');
 const Notification = require('../models/Notification');
@@ -5,6 +10,7 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
+/** Call OpenAI chat completions API with the given messages; returns the assistant's text reply */
 async function openaiChat(messages, options = {}) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('Missing OPENAI_API_KEY');

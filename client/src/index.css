@@ -1,3 +1,7 @@
+/**
+ * Global styles and CSS variables for the Appah Farms app.
+ * Defines colors, radii, shadows, safe areas, and base resets.
+ */
 :root {
   --color-primary: #2e7d32;
   --color-primary-hover: #1b5e20;

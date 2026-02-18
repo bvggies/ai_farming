@@ -1,3 +1,10 @@
+/**
+ * Admin panel: for users with role "admin" only. Tabs: Dashboard (stats + charts), Users, Posts, Knowledge.
+ * - Dashboard: overview stats, posts by type, users by role, knowledge categories, recent activity.
+ * - Users: table of users; add, edit role, activate/deactivate, delete.
+ * - Posts: card list; approve/reject; add post.
+ * - Knowledge: list entries; filter by category; add/edit/delete; export.
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FiUsers, FiFileText, FiBook, FiTrendingUp, FiCheckCircle, FiXCircle, 
@@ -8,26 +15,32 @@ import api from '../services/api';
 import './AdminPanel.css';
 
 const AdminPanel = ({ user }) => {
+  // Which tab is active and data for each section
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
   const [knowledge, setKnowledge] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  // Modals and forms
   const [showUserModal, setShowUserModal] = useState(false);
   const [showKnowledgeModal, setShowKnowledgeModal] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
   const [postForm, setPostForm] = useState({ title: '', content: '', type: 'tip' });
-  const [knowledgeFilter, setKnowledgeFilter] = useState('all'); // all | faq | other
+  const [knowledgeFilter, setKnowledgeFilter] = useState('all'); // 'all' | 'faq' | 'other'
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('admin_dark') === '1');
 
+  // Load overview stats on mount
   useEffect(() => {
     fetchStats();
   }, []);
 
+  // When switching tabs, load that tab's data (users, posts, or knowledge)
   useEffect(() => {
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'posts') fetchPosts();
@@ -39,21 +52,27 @@ const AdminPanel = ({ user }) => {
     localStorage.setItem('admin_dark', darkMode ? '1' : '0');
   }, [darkMode]);
 
-  // Auto refresh stats every 30s
+  // Refresh dashboard stats every 30 seconds
   useEffect(() => {
     const id = setInterval(fetchStats, 30000);
     return () => clearInterval(id);
   }, []);
 
+  /** Fetch admin overview (user count, post count, knowledge count, etc.) */
   const fetchStats = async () => {
     try {
+      setStatsError(null);
       const response = await api.get('/admin/stats');
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
+      setStatsError(error.response?.data?.message || 'Failed to load dashboard');
+    } finally {
+      setStatsLoading(false);
     }
   };
 
+  /** Load all users for the Admin Users tab */
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -66,6 +85,7 @@ const AdminPanel = ({ user }) => {
     }
   };
 
+  /** Load all posts (including unapproved) for the Admin Posts tab */
   const fetchPosts = async () => {
     try {
       setLoading(true);
@@ -78,6 +98,7 @@ const AdminPanel = ({ user }) => {
     }
   };
 
+  /** Load all knowledge entries for the Admin Knowledge tab */
   const fetchKnowledge = async () => {
     try {
       setLoading(true);
@@ -271,7 +292,48 @@ const AdminPanel = ({ user }) => {
         </div>
       </header>
 
-      {stats && (
+      <div className="admin-tabs-wrap">
+        <div className="admin-tabs">
+          <button
+            className={activeTab === 'dashboard' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            <FiBarChart2 /> Dashboard
+          </button>
+          <button
+            className={activeTab === 'users' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('users')}
+          >
+            <FiUsers /> Users
+          </button>
+          <button
+            className={activeTab === 'posts' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('posts')}
+          >
+            <FiFileText /> Posts
+          </button>
+          <button
+            className={activeTab === 'knowledge' ? 'tab-active' : ''}
+            onClick={() => setActiveTab('knowledge')}
+          >
+            <FiBook /> Knowledge
+          </button>
+          <button onClick={fetchStats} className="admin-tabs__refresh" title="Refresh stats">
+            <FiRefreshCw /> Refresh
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'dashboard' && statsLoading && !stats && (
+        <div className="loading">Loading dashboard...</div>
+      )}
+      {activeTab === 'dashboard' && statsError && !stats && (
+        <div className="admin-stats-error">
+          <p>{statsError}</p>
+          <button type="button" className="btn btn-primary" onClick={() => { setStatsLoading(true); fetchStats(); }}>Retry</button>
+        </div>
+      )}
+      {activeTab === 'dashboard' && stats && (
         <div className="dashboard-overview">
           <div className="stats-grid">
             <div className="stat-card stat-primary">
@@ -412,38 +474,6 @@ const AdminPanel = ({ user }) => {
           </div>
         </div>
       )}
-
-      <div className="admin-tabs-wrap">
-        <div className="admin-tabs">
-          <button
-            className={activeTab === 'dashboard' ? 'tab-active' : ''}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <FiBarChart2 /> Dashboard
-          </button>
-          <button
-            className={activeTab === 'users' ? 'tab-active' : ''}
-            onClick={() => setActiveTab('users')}
-          >
-            <FiUsers /> Users
-          </button>
-          <button
-            className={activeTab === 'posts' ? 'tab-active' : ''}
-            onClick={() => setActiveTab('posts')}
-          >
-            <FiFileText /> Posts
-          </button>
-          <button
-            className={activeTab === 'knowledge' ? 'tab-active' : ''}
-            onClick={() => setActiveTab('knowledge')}
-          >
-            <FiBook /> Knowledge
-          </button>
-          <button onClick={fetchStats} className="admin-tabs__refresh" title="Refresh stats">
-            <FiRefreshCw /> Refresh
-          </button>
-        </div>
-      </div>
 
       {(activeTab !== 'dashboard') && (
         <div className="search-bar">

@@ -1,28 +1,38 @@
+/**
+ * AI Chat page: chat with the Appah Farm AI assistant.
+ * Supports text messages and voice input (record → transcribe → AI reply). Uses the last 10 messages
+ * as context. Can play assistant replies with text-to-speech.
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { FiSend, FiMessageCircle, FiMic, FiSquare, FiVolume2, FiVolumeX } from 'react-icons/fi';
 import api from '../services/api';
 import './AIChat.css';
 
 const AIChat = ({ user }) => {
+  // Chat state
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [playingIndex, setPlayingIndex] = useState(null);
+  // Refs: MediaRecorder for voice, chunks of audio, scroll anchor, and current TTS utterance
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const messagesEndRef = useRef(null);
   const speechSynthRef = useRef(null);
 
+  /** Scroll the message list so the latest message is visible */
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, loading]);
 
-  // Cleanup speech synthesis on unmount
+  // When the component unmounts, stop any playing text-to-speech
   useEffect(() => {
     return () => {
       if (speechSynthRef.current) {
@@ -31,6 +41,7 @@ const AIChat = ({ user }) => {
     };
   }, []);
 
+  /** Send the current input as a user message, call AI with context, and append the reply (or error) */
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -64,6 +75,7 @@ const AIChat = ({ user }) => {
     }
   };
 
+  /** Start recording from the microphone; when stopped, audio is sent to transcribe then to AI chat */
   const startRecording = async () => {
     if (recording) return;
     try {
@@ -126,6 +138,7 @@ const AIChat = ({ user }) => {
     }
   };
 
+  /** Stop the current recording; the onstop handler will transcribe and send to AI */
   const stopRecording = () => {
     if (!recording || !mediaRecorderRef.current) return;
     mediaRecorderRef.current.stop();
@@ -133,6 +146,7 @@ const AIChat = ({ user }) => {
     setRecording(false);
   };
 
+  /** Convert an audio Blob to base64 string so it can be sent to the transcribe API */
   const blobToBase64 = (blob) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -144,6 +158,7 @@ const AIChat = ({ user }) => {
     reader.readAsDataURL(blob);
   });
 
+  /** Use the browser's speech synthesis to read the assistant message aloud; click again to stop */
   const playAudio = (text, index) => {
     // Stop any currently playing audio
     if (speechSynthRef.current) {
@@ -196,7 +211,7 @@ const AIChat = ({ user }) => {
                 <FiMessageCircle size={40} className="ai-chat-welcome__icon" />
               </div>
               <h2 className="ai-chat-welcome__title">Hello, {user?.name || 'there'}!</h2>
-              <p className="ai-chat-welcome__lead">I'm Appah Farm AI — here to help with poultry farming.</p>
+              <p className="ai-chat-welcome__lead">I'm Appah Farms AI — here to help with poultry farming.</p>
               <p className="ai-chat-welcome__hint">Ask about health, feeding, housing, or best practices.</p>
             </div>
           )}
@@ -207,7 +222,7 @@ const AIChat = ({ user }) => {
               className={`ai-chat-msg ai-chat-msg--${msg.role === 'user' ? 'user' : 'assistant'}`}
             >
               <div className="ai-chat-msg__header">
-                <span className="ai-chat-msg__label">{msg.role === 'user' ? 'You' : 'AI Assistant'}</span>
+                <span className="ai-chat-msg__label">{msg.role === 'user' ? 'You' : 'Appah Farms AI'}</span>
                 {msg.role === 'assistant' && (
                   <button
                     type="button"
@@ -227,7 +242,7 @@ const AIChat = ({ user }) => {
           {loading && (
             <div className="ai-chat-msg ai-chat-msg--assistant ai-chat-msg--typing">
               <div className="ai-chat-msg__header">
-                <span className="ai-chat-msg__label">AI Assistant</span>
+                <span className="ai-chat-msg__label">Appah Farms AI</span>
               </div>
               <div className="ai-chat-typing">
                 <span className="ai-chat-typing__dot" />
@@ -272,6 +287,7 @@ const AIChat = ({ user }) => {
             </button>
           </div>
         </form>
+        <p className="ai-chat-powered">Powered by OpenAI</p>
       </div>
     </div>
   );
