@@ -2,13 +2,9 @@
   "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/build",
   "rewrites": [
-    {
-      "source": "/api/posts/:id",
-      "destination": "/api/posts/postById?id=:id"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/$1"
-    }
+    { "source": "/api/posts/:id/like", "destination": "/api/post-like" },
+    { "source": "/api/posts/:id/comment", "destination": "/api/post-comment" },
+    { "source": "/api/posts/:id", "destination": "/api/posts/postById" },
+    { "source": "/(.*)", "destination": "/$1" }
   ]
 }

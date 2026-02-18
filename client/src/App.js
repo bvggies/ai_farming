@@ -22,12 +22,18 @@ import AdminPanel from './pages/AdminPanel';
 import Notifications from './pages/Notifications';
 import Navbar from './components/Navbar';
 import MobileBar from './components/MobileBar';
+import { SplashScreen } from '@capacitor/splash-screen';
 import './App.css';
 
 function App() {
   // Current logged-in user (null = guest). Loading = we're still checking the token.
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Hide native splash (welcome) screen when app has finished initial load
+  useEffect(() => {
+    if (!loading) SplashScreen.hide().catch(() => {});
+  }, [loading]);
 
   // On first load: if we have a token, fetch user data; otherwise we're a guest
   useEffect(() => {
