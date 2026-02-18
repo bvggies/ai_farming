@@ -11,8 +11,8 @@ import {
   FiEdit, FiTrash2, FiPlus, FiBarChart2, FiClock, FiShield,
   FiSearch, FiFilter, FiRefreshCw, FiEye, FiEyeOff, FiDownload, FiSun, FiMoon, FiChevronDown
 } from 'react-icons/fi';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import api from '../services/api';
 import './AdminPanel.css';
 
@@ -267,8 +267,8 @@ const AdminPanel = ({ user }) => {
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
     
-    // Add table
-    doc.autoTable({
+    // Add table using autoTable function
+    autoTable(doc, {
       head: [columns],
       body: rows.map(row => columns.map(col => row[col] || '')),
       startY: 35,
