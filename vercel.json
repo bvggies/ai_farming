@@ -5,6 +5,7 @@
     { "source": "/api/posts/:id/like", "destination": "/api/post-like" },
     { "source": "/api/posts/:id/comment", "destination": "/api/post-comment" },
     { "source": "/api/posts/:id", "destination": "/api/posts/postById" },
+    { "source": "/api/notifications/:id/read", "destination": "/api/notification-read" },
     { "source": "/(.*)", "destination": "/$1" }
   ]
 }

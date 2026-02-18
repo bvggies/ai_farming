@@ -4,25 +4,21 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiHeart, FiMessageCircle, FiArrowRight, FiMessageSquare, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiHeart, FiMessageCircle, FiArrowRight, FiMessageSquare } from 'react-icons/fi';
 import api from '../services/api';
 import './Posts.css';
 
 const Posts = ({ user }) => {
-  // List state, filter by type, and search (search is debounced from searchInput)
+  // List state and filter by type
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
 
-  /** Fetch posts from API with optional search param; filter by type on the client */
+  /** Fetch posts from API and filter by type on the client */
   const fetchPosts = React.useCallback(async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (search.trim()) params.search = search.trim();
-      const response = await api.get('/posts', { params });
+      const response = await api.get('/posts');
       let filteredPosts = response.data;
       if (filter !== 'all') filteredPosts = filteredPosts.filter(post => post.type === filter);
       setPosts(filteredPosts);
@@ -31,15 +27,9 @@ const Posts = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  }, [filter, search]);
+  }, [filter]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
-
-  // Debounce search: update `search` 400ms after user stops typing
-  useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput), 400);
-    return () => clearTimeout(t);
-  }, [searchInput]);
 
   /** Toggle like on a post and update the post in the list with the API response */
   const handleLike = async (postId) => {
@@ -64,17 +54,6 @@ const Posts = ({ user }) => {
         </Link>
       </div>
 
-      <div className="posts-search">
-        <span className="posts-search-icon"><FiSearch /></span>
-        <input
-          type="search"
-          placeholder="Search posts by title or content..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          className="posts-search-input"
-          aria-label="Search posts"
-        />
-      </div>
       <div className="posts-filters">
         {['all', 'question', 'tip', 'experience'].map(f => (
           <button

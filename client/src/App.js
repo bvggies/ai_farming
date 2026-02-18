@@ -35,23 +35,40 @@ function App() {
     if (!loading) SplashScreen.hide().catch(() => {});
   }, [loading]);
 
-  // On first load: if we have a token, fetch user data; otherwise we're a guest
+  // On first load: if we have a token, fetch user data; otherwise we're a guest.
+  // Timeout so we never hang on splash if the API is unreachable (e.g. wrong URL on device).
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const timeoutMs = 10000; // 10 second max wait
+    let cancelled = false;
+
+    const done = () => {
+      if (!cancelled) {
+        cancelled = true;
+        setLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(done, timeoutMs);
+
     if (token) {
       authService.getCurrentUser()
         .then(userData => {
-          setUser(userData);
+          if (!cancelled) setUser(userData);
         })
         .catch(() => {
-          localStorage.removeItem('token');
+          if (!cancelled) localStorage.removeItem('token');
         })
         .finally(() => {
-          setLoading(false);
+          clearTimeout(timeoutId);
+          done();
         });
     } else {
-      setLoading(false);
+      clearTimeout(timeoutId);
+      done();
     }
+
+    return () => { cancelled = true; clearTimeout(timeoutId); };
   }, []);
 
   /** Called after successful login or register: store token and set user so the app shows logged-in UI */

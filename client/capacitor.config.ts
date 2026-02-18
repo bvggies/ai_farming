@@ -7,8 +7,8 @@ const config: CapacitorConfig = {
   webDir: 'build',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2500,
-      launchAutoHide: false,
+      launchShowDuration: 2000,
+      launchAutoHide: true,
       launchFadeOutDuration: 400,
       backgroundColor: '#2e7d32',
       showSpinner: false,

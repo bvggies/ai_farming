@@ -5,8 +5,9 @@
  */
 import axios from 'axios';
 
-// Backend URL: from environment variable in production, or localhost when developing
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Backend URL: env var, or production default for built app (e.g. APK), or localhost for dev
+const API_URL = process.env.REACT_APP_API_URL
+  || (process.env.NODE_ENV === 'production' ? 'https://ai-farming-seven.vercel.app/api' : 'http://localhost:5000/api');
 
 // Create one shared axios instance with default base URL and JSON header
 const api = axios.create({

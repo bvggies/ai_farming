@@ -262,7 +262,7 @@ const AIChat = ({ user }) => {
               className="ai-chat-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about poultry farming..."
+              placeholder="Ask anything about poultry farming"
               disabled={loading}
               aria-label="Message"
             />
