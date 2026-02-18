@@ -93,10 +93,13 @@ module.exports = async (req, res) => {
         return res.status(400).json({ message: 'User already exists' });
       }
 
+      const allowedRoles = ['worker', 'manager', 'supervisor', 'admin'];
+      const userRole = role && allowedRoles.includes(role) ? role : 'worker';
+
       const hashed = await bcrypt.hash(password, 10);
       const inserted = await sql`
         INSERT INTO users (name, email, password, farm_size, poultry_type, preferred_language, role, is_active)
-        VALUES (${name}, ${email.toLowerCase().trim()}, ${hashed}, ${farmSize || ''}, ${poultryType || ''}, ${preferredLanguage || 'en'}, ${role || 'farmer'}, true)
+        VALUES (${name}, ${email.toLowerCase().trim()}, ${hashed}, ${farmSize || ''}, ${poultryType || ''}, ${preferredLanguage || 'en'}, ${userRole}, true)
         RETURNING id, name, email, role, is_active
       `;
 

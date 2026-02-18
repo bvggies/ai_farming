@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { FiUser, FiMail, FiShield, FiCalendar, FiEdit3, FiSave, FiX, FiSettings, FiGlobe, FiHome, FiPackage } from 'react-icons/fi';
+import { FiUser, FiMail, FiShield, FiCalendar, FiEdit3, FiSave, FiX, FiSettings, FiGlobe } from 'react-icons/fi';
 import { authService } from '../services/authService';
 import './Profile.css';
 
 const Profile = ({ user, setUser }) => {
   const [formData, setFormData] = useState({
     name: user.name || '',
-    farmSize: user.farmSize || '',
-    poultryType: user.poultryType || '',
     preferredLanguage: user.preferredLanguage || 'en'
   });
   const [error, setError] = useState('');
@@ -41,8 +39,6 @@ const Profile = ({ user, setUser }) => {
   const handleCancel = () => {
     setFormData({
       name: user.name || '',
-      farmSize: user.farmSize || '',
-      poultryType: user.poultryType || '',
       preferredLanguage: user.preferredLanguage || 'en'
     });
     setIsEditing(false);
@@ -51,7 +47,18 @@ const Profile = ({ user, setUser }) => {
   };
 
   const getRoleBadgeColor = (role) => {
-    return role === 'admin' ? '#f59e0b' : '#4CAF50';
+    if (role === 'admin') return '#f59e0b';
+    if (role === 'manager') return '#0891b2';
+    if (role === 'supervisor') return '#d97706';
+    return '#4CAF50'; // worker
+  };
+
+  const getRoleLabel = (role) => {
+    if (role === 'admin') return 'Administrator';
+    if (role === 'manager') return 'Manager';
+    if (role === 'supervisor') return 'Supervisor';
+    if (role === 'farmer' || role === 'farm_supervisor') return role === 'farm_supervisor' ? 'Manager' : 'Worker'; // legacy
+    return 'Worker';
   };
 
   const getLanguageName = (code) => {
@@ -99,7 +106,7 @@ const Profile = ({ user, setUser }) => {
             className="profile-role-badge"
             style={{ backgroundColor: getRoleBadgeColor(user.role) }}
           >
-            <FiShield size={14} /> {user.role === 'admin' ? 'Administrator' : 'Farmer'}
+            <FiShield size={14} /> {getRoleLabel(user.role)}
           </span>
         </div>
       </div>
@@ -146,20 +153,6 @@ const Profile = ({ user, setUser }) => {
               </div>
               <div className="info-row">
                 <div className="info-label">
-                  <FiHome size={16} />
-                  <span>Farm Size</span>
-                </div>
-                <div className="info-value">{formData.farmSize || 'Not specified'}</div>
-              </div>
-              <div className="info-row">
-                <div className="info-label">
-                  <FiPackage size={16} />
-                  <span>Poultry Type</span>
-                </div>
-                <div className="info-value">{formData.poultryType || 'Not specified'}</div>
-              </div>
-              <div className="info-row">
-                <div className="info-label">
                   <FiGlobe size={16} />
                   <span>Preferred Language</span>
                 </div>
@@ -183,42 +176,6 @@ const Profile = ({ user, setUser }) => {
                   placeholder="Enter your full name"
                   className="form-input-modern"
                 />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="farmSize">
-                  <FiHome size={16} />
-                  Farm Size
-                </label>
-                <input
-                  type="text"
-                  id="farmSize"
-                  name="farmSize"
-                  value={formData.farmSize}
-                  onChange={handleChange}
-                  placeholder="e.g., Small (50-200 birds)"
-                  className="form-input-modern"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="poultryType">
-                  <FiPackage size={16} />
-                  Poultry Type
-                </label>
-                <select
-                  id="poultryType"
-                  name="poultryType"
-                  value={formData.poultryType}
-                  onChange={handleChange}
-                  className="form-input-modern"
-                >
-                  <option value="">Select poultry type</option>
-                  <option value="Layers">Layers (Egg production)</option>
-                  <option value="Broilers">Broilers (Meat production)</option>
-                  <option value="Mixed">Mixed</option>
-                  <option value="Other">Other</option>
-                </select>
               </div>
 
               <div className="form-field">
@@ -283,7 +240,7 @@ const Profile = ({ user, setUser }) => {
                 <FiShield size={16} />
                 <span>Account Type</span>
               </div>
-              <div className="info-value">{user.role === 'admin' ? 'Administrator' : 'Farmer'}</div>
+              <div className="info-value">{getRoleLabel(user.role)}</div>
             </div>
             <div className="info-row">
               <div className="info-label">

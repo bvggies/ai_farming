@@ -18,7 +18,7 @@ model User {
   farmSize           String?  @default("")
   poultryType        String?  @default("")
   preferredLanguage  String   @default("en")
-  role               Role     @default(farmer)
+  role               Role     @default(worker)
   isActive           Boolean  @default(true)
   createdAt          DateTime @default(now())
 
@@ -98,7 +98,9 @@ model Notification {
 }
 
 enum Role {
-  farmer
+  worker
+  manager
+  supervisor
   admin
 }
 

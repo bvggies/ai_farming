@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiHeart, FiMessageCircle, FiArrowRight } from 'react-icons/fi';
+import { FiPlus, FiHeart, FiMessageCircle, FiArrowRight, FiMessageSquare } from 'react-icons/fi';
 import api from '../services/api';
+import './Posts.css';
 
 const Posts = ({ user }) => {
   const [posts, setPosts] = useState([]);
@@ -44,172 +45,84 @@ const Posts = ({ user }) => {
   }
 
   return (
-    <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="container posts-page">
+      <div className="page-top">
         <h1>Community Posts</h1>
-        <Link to="/create-post" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+        <Link to="/create-post" className="btn btn-primary">
           <FiPlus /> Create Post
         </Link>
       </div>
 
-      <div style={filterStyle}>
-        <button
-          className={filter === 'all' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setFilter('all')}
-          style={{ marginRight: '10px' }}
-        >
-          All
-        </button>
-        <button
-          className={filter === 'question' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setFilter('question')}
-          style={{ marginRight: '10px' }}
-        >
-          Questions
-        </button>
-        <button
-          className={filter === 'tip' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setFilter('tip')}
-          style={{ marginRight: '10px' }}
-        >
-          Tips
-        </button>
-        <button
-          className={filter === 'experience' ? 'btn btn-primary' : 'btn btn-outline'}
-          onClick={() => setFilter('experience')}
-        >
-          Experiences
-        </button>
+      <div className="posts-filters">
+        {['all', 'question', 'tip', 'experience'].map(f => (
+          <button
+            key={f}
+            type="button"
+            className={`filter-pill ${filter === f ? 'active' : ''}`}
+            onClick={() => setFilter(f)}
+          >
+            {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
       </div>
 
       {posts.length === 0 ? (
-        <div className="card">
-          <p style={{ textAlign: 'center', color: '#666' }}>No posts found. Be the first to share!</p>
+        <div className="card posts-empty empty-state">
+          <FiMessageSquare className="empty-state-icon" size={48} />
+          <h3>No posts found</h3>
+          <p>Be the first to share a tip, question, or experience with the community.</p>
+          <Link to="/create-post" className="btn btn-primary">Create Post</Link>
         </div>
       ) : (
-        posts.map(post => (
-          <div key={post._id} className="card">
-            <div style={postHeaderStyle}>
-              <div>
-                <h2 style={postTitleStyle}>{post.title}</h2>
-                <p style={postMetaStyle}>
-                  By {post.author?.name || 'Unknown'} • {new Date(post.createdAt).toLocaleDateString()}
-                  {post.type && <span style={badgeStyle}>{post.type}</span>}
-                </p>
+        <div className="posts-list-cards">
+          {posts.map(post => (
+            <article key={post._id} className="post-card card">
+              <div className="post-card-header">
+                <div>
+                  <h2 className="post-card-title">{post.title}</h2>
+                  <p className="post-card-meta">
+                    By {post.author?.name || 'Unknown'} • {new Date(post.createdAt).toLocaleDateString()}
+                    {post.type && <span className="post-card-badge">{post.type}</span>}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <p style={postContentStyle}>{post.content}</p>
+              <p className="post-card-content">{post.content}</p>
 
-            {post.images && post.images.length > 0 && (
-              <div style={imagesStyle}>
-                {post.images.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${img}`}
-                    alt={`Post ${idx + 1}`}
-                    style={imageStyle}
-                  />
-                ))}
+              {post.images && post.images.length > 0 && (
+                <div className="post-card-images">
+                  {post.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${img}`}
+                      alt={`Post ${idx + 1}`}
+                      className="post-card-image"
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div className="post-card-actions">
+                <button
+                  type="button"
+                  onClick={() => handleLike(post._id)}
+                  style={{ color: post.likes?.some(like => like._id === user?.id || like === user?.id) ? '#c62828' : undefined }}
+                >
+                  <FiHeart /> {post.likes?.length || 0}
+                </button>
+                <Link to={`/posts/${post._id}`}>
+                  <FiMessageCircle /> {post.comments?.length || 0} Comments
+                </Link>
+                <Link to={`/posts/${post._id}`} className="read-more">
+                  Read more <FiArrowRight />
+                </Link>
               </div>
-            )}
-
-            <div style={postActionsStyle}>
-              <button
-                onClick={() => handleLike(post._id)}
-                style={{
-                  ...actionButtonStyle,
-                  color: post.likes?.some(like => like._id === user.id || like === user.id) ? '#f44336' : '#666'
-                }}
-              >
-                <FiHeart /> {post.likes?.length || 0}
-              </button>
-              <Link to={`/posts/${post._id}`} style={actionButtonStyle}>
-                <FiMessageCircle /> {post.comments?.length || 0} Comments
-              </Link>
-              <Link to={`/posts/${post._id}`} style={{ ...actionButtonStyle, marginLeft: 'auto' }}>
-                Read More <FiArrowRight />
-              </Link>
-            </div>
-          </div>
-        ))
+            </article>
+          ))}
+        </div>
       )}
     </div>
   );
-};
-
-const filterStyle = {
-  marginBottom: '20px'
-};
-
-const postHeaderStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  marginBottom: '15px'
-};
-
-const postTitleStyle = {
-  fontSize: '24px',
-  marginBottom: '8px',
-  color: '#333'
-};
-
-const postMetaStyle = {
-  fontSize: '14px',
-  color: '#666',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px'
-};
-
-const badgeStyle = {
-  backgroundColor: '#e3f2fd',
-  color: '#1976d2',
-  padding: '4px 8px',
-  borderRadius: '4px',
-  fontSize: '12px',
-  fontWeight: '500'
-};
-
-const postContentStyle = {
-  color: '#555',
-  lineHeight: '1.8',
-  marginBottom: '15px',
-  whiteSpace: 'pre-wrap'
-};
-
-const imagesStyle = {
-  display: 'flex',
-  gap: '10px',
-  marginBottom: '15px',
-  flexWrap: 'wrap'
-};
-
-const imageStyle = {
-  maxWidth: '200px',
-  maxHeight: '200px',
-  borderRadius: '8px',
-  objectFit: 'cover'
-};
-
-const postActionsStyle = {
-  display: 'flex',
-  gap: '15px',
-  alignItems: 'center',
-  paddingTop: '15px',
-  borderTop: '1px solid #eee'
-};
-
-const actionButtonStyle = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '5px',
-  color: '#666',
-  textDecoration: 'none',
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: '14px'
 };
 
 export default Posts;

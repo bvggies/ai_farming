@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiSend, FiMessageCircle, FiMic, FiSquare, FiVolume2, FiVolumeX } from 'react-icons/fi';
 import api from '../services/api';
+import './AIChat.css';
 
 const AIChat = ({ user }) => {
   const [messages, setMessages] = useState([]);
@@ -185,285 +186,82 @@ const AIChat = ({ user }) => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   return (
-    <div className="container" style={{ paddingBottom: isMobile ? '90px' : '24px' }}>
-      <h1>Appah Farms AI</h1>
+    <div className={`container ai-chat-page ${isMobile ? 'ai-chat-mobile' : ''}`} style={{ paddingBottom: isMobile ? '90px' : '24px' }}>
+      <h1 className="page-title">Appah Farms AI</h1>
 
-      <div className="card" style={{ ...chatContainerStyle, ...(isMobile ? chatContainerMobileStyle : {}) }}>
-        <div style={{ ...messagesContainerStyle, ...(isMobile ? messagesContainerMobileStyle : {}) }}>
+      <div className="card ai-chat-card">
+        <div className="ai-chat-messages">
           {messages.length === 0 && (
-            <div style={welcomeMessageStyle}>
-              <FiMessageCircle size={48} color="#4CAF50" />
-              <h2>Hello, {user.name}!</h2>
-              <p>I'm Appah Farm AI, I'm here to assist you with Poultry farming related questions</p>
-              <p>Is there anything i can help you with now?</p>
+            <div className="ai-chat-welcome">
+              <FiMessageCircle size={48} />
+              <h2>Hello, {user?.name || 'there'}!</h2>
+              <p>I'm Appah Farm AI. I'm here to help with poultry farming questions.</p>
+              <p>Ask me about health, feeding, housing, or best practices.</p>
             </div>
           )}
 
           {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              style={{
-                ...messageStyle,
-                ...(msg.role === 'user' ? userMessageStyle : aiMessageStyle)
-              }}
-            >
-              <div style={messageContentStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <strong>{msg.role === 'user' ? 'You' : 'AI Assistant'}:</strong>
-                  {msg.role === 'assistant' && (
-                    <button
-                      onClick={() => playAudio(msg.content, idx)}
-                      onMouseEnter={(e) => e.target.style.opacity = '1'}
-                      onMouseLeave={(e) => e.target.style.opacity = '0.8'}
-                      style={audioButtonStyle}
-                      title={playingIndex === idx ? 'Stop playback' : 'Play audio'}
-                    >
-                      {playingIndex === idx ? <FiVolumeX /> : <FiVolume2 />}
-                    </button>
-                  )}
-                </div>
-                <p style={{ marginTop: '8px', whiteSpace: 'pre-wrap' }}>{msg.content}</p>
+            <div key={idx} className={`ai-chat-msg ${msg.role === 'user' ? 'user' : 'assistant'}`}>
+              <div className="ai-chat-msg-header">
+                <strong>{msg.role === 'user' ? 'You' : 'AI Assistant'}</strong>
+                {msg.role === 'assistant' && (
+                  <button
+                    type="button"
+                    className="ai-chat-btn voice"
+                    onClick={() => playAudio(msg.content, idx)}
+                    title={playingIndex === idx ? 'Stop playback' : 'Play audio'}
+                  >
+                    {playingIndex === idx ? <FiVolumeX size={20} /> : <FiVolume2 size={20} />}
+                  </button>
+                )}
               </div>
+              <div className="ai-chat-msg-content">{msg.content}</div>
             </div>
           ))}
 
           {loading && (
-            <div style={{ ...messageStyle, ...aiMessageStyle }}>
-              <div style={messageContentStyle}>
-                <strong>AI Assistant:</strong>
-                <p style={{ marginTop: '8px' }}>Thinking...</p>
-              </div>
+            <div className="ai-chat-msg assistant">
+              <div className="ai-chat-msg-header"><strong>AI Assistant</strong></div>
+              <div className="ai-chat-msg-content">Thinking...</div>
             </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleSend} style={{ ...inputFormStyle, ...(isMobile ? inputFormMobileStyle : {}) }}>
-          <div style={getInputContainerStyle(inputFocused)}>
+        <form onSubmit={handleSend} className="ai-chat-form">
+          <div className="ai-chat-input-wrap">
             <input
               type="text"
+              className="ai-chat-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask me anything about poultry farming"
-              style={{ ...modernInputStyle, ...(isMobile ? modernInputMobileStyle : {}) }}
               disabled={loading}
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
             />
-            <div style={inputButtonsContainerStyle}>
-              <button 
-                type="button" 
-                onClick={recording ? stopRecording : startRecording} 
-                disabled={loading} 
-                style={{ 
-                  ...inputButtonStyle, 
-                  ...(recording ? recordingButtonStyle : {}),
-                  ...(loading ? disabledButtonStyle : {})
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                title={recording ? 'Stop recording' : 'Voice input'}
-              >
-                {recording ? <FiSquare size={20} /> : <FiMic size={20} />}
-              </button>
-              <button 
-                type="submit" 
-                disabled={loading || !input.trim()} 
-                style={{ 
-                  ...inputButtonStyle, 
-                  ...sendButtonStyle, 
-                  ...(!input.trim() ? disabledButtonStyle : {})
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading && input.trim()) {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.3)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-                title="Send message"
-              >
-                <FiSend size={20} />
-              </button>
-            </div>
+            <button
+              type="button"
+              className={`ai-chat-btn voice ${recording ? 'recording' : ''}`}
+              onClick={recording ? stopRecording : startRecording}
+              disabled={loading}
+              title={recording ? 'Stop recording' : 'Voice input'}
+            >
+              {recording ? <FiSquare size={20} /> : <FiMic size={20} />}
+            </button>
+            <button
+              type="submit"
+              className="ai-chat-btn send"
+              disabled={loading || !input.trim()}
+              title="Send message"
+            >
+              <FiSend size={20} />
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
 };
-
-const chatContainerStyle = {
-  height: '600px',
-  display: 'flex',
-  flexDirection: 'column'
-};
-
-const chatContainerMobileStyle = {
-  height: 'calc(100vh - 180px)'
-};
-
-const messagesContainerStyle = {
-  flex: 1,
-  overflowY: 'auto',
-  padding: '20px',
-  backgroundColor: '#f9f9f9',
-  borderRadius: '8px',
-  marginBottom: '20px'
-};
-
-const messagesContainerMobileStyle = {
-  padding: '12px',
-  marginBottom: '0'
-};
-
-const welcomeMessageStyle = {
-  textAlign: 'center',
-  padding: '40px 20px',
-  color: '#666'
-};
-
-const messageStyle = {
-  marginBottom: '15px',
-  padding: '12px 16px',
-  borderRadius: '8px',
-  maxWidth: '80%'
-};
-
-const userMessageStyle = {
-  backgroundColor: '#4CAF50',
-  color: 'white',
-  marginLeft: 'auto',
-  textAlign: 'right'
-};
-
-const aiMessageStyle = {
-  backgroundColor: 'white',
-  color: '#333',
-  border: '1px solid #ddd'
-};
-
-const messageContentStyle = {
-  lineHeight: '1.6'
-};
-
-const inputFormStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '10px'
-};
-
-const modernInputContainerStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  backgroundColor: '#fff',
-  border: '2px solid #e5e7eb',
-  borderRadius: '24px',
-  padding: '4px 4px 4px 16px',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-  transition: 'all 0.3s ease',
-  gap: '8px'
-};
-
-// Add hover effect via inline style with onFocus/onBlur
-const getInputContainerStyle = (isFocused) => ({
-  ...modernInputContainerStyle,
-  borderColor: isFocused ? '#4CAF50' : '#e5e7eb',
-  boxShadow: isFocused ? '0 4px 12px rgba(76, 175, 80, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.08)'
-});
-
-const modernInputStyle = {
-  flex: 1,
-  border: 'none',
-  outline: 'none',
-  fontSize: '16px',
-  padding: '12px 8px',
-  backgroundColor: 'transparent',
-  color: '#1f2937'
-};
-
-const modernInputMobileStyle = {
-  fontSize: '16px',
-  padding: '10px 6px'
-};
-
-const inputButtonsContainerStyle = {
-  display: 'flex',
-  gap: '6px',
-  alignItems: 'center'
-};
-
-const inputButtonStyle = {
-  width: '44px',
-  height: '44px',
-  borderRadius: '50%',
-  border: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  transition: 'all 0.2s ease',
-  backgroundColor: '#f3f4f6',
-  color: '#6b7280'
-};
-
-
-const recordingButtonStyle = {
-  backgroundColor: '#fee2e2',
-  color: '#dc2626'
-};
-
-const sendButtonStyle = {
-  backgroundColor: '#4CAF50',
-  color: 'white'
-};
-
-const disabledButtonStyle = {
-  opacity: 0.5,
-  cursor: 'not-allowed'
-};
-
-const inputFormMobileStyle = {
-  position: 'sticky',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  padding: '10px',
-  gap: '8px',
-  background: '#fff',
-  borderTop: '1px solid #eee',
-  marginTop: '8px',
-  paddingBottom: 'calc(10px + env(safe-area-inset-bottom))',
-  zIndex: 2
-};
-
-const audioButtonStyle = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  color: '#4CAF50',
-  fontSize: '18px',
-  padding: '4px 8px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: '4px',
-  transition: 'all 0.2s',
-  opacity: 0.8
-};
-
 
 export default AIChat;
 

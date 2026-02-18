@@ -34,7 +34,7 @@ Create a file `server/.env` with the following:
 PORT=5000
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=require
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production_12345
-GROQ_API_KEY=your_groq_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 UPLOAD_DIR=./uploads
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key

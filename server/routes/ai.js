@@ -1,14 +1,33 @@
 const express = require('express');
-const Groq = require('groq-sdk');
 const KnowledgeBase = require('../models/KnowledgeBase');
 const Notification = require('../models/Notification');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || ''
-});
+async function openaiChat(messages, options = {}) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('Missing OPENAI_API_KEY');
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+      temperature: options.temperature ?? 0.7,
+      max_tokens: options.max_tokens ?? 1024,
+      messages
+    })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || 'OpenAI request failed');
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
 
 // AI Chat
 router.post('/chat', auth, async (req, res) => {
@@ -47,18 +66,11 @@ Always respond in simple, clear language that farmers with limited technical kno
 
     const fullMessage = relevantContent ? `${message}\n\n${relevantContent}` : message;
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...(context || []),
-        { role: 'user', content: fullMessage }
-      ],
-      model: 'llama-3.1-8b-instant',
-      temperature: 0.7,
-      max_tokens: 1024
-    });
-
-    const aiResponse = completion.choices[0]?.message?.content || 'I apologize, but I could not generate a response.';
+    const aiResponse = await openaiChat([
+      { role: 'system', content: systemPrompt },
+      ...(context || []),
+      { role: 'user', content: fullMessage }
+    ], { temperature: 0.7, max_tokens: 1024 }) || 'I apologize, but I could not generate a response.';
 
     // Create notification for AI suggestion
     await Notification.create({
@@ -74,7 +86,7 @@ Always respond in simple, clear language that farmers with limited technical kno
       relevantContent: relevantContent ? true : false
     });
   } catch (error) {
-    console.error('Groq API error:', error);
+    console.error('OpenAI API error:', error);
     res.status(500).json({ 
       message: 'Error communicating with AI assistant', 
       error: error.message 
@@ -100,24 +112,17 @@ router.post('/summarize', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid action or missing target language' });
     }
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant that summarizes and translates agricultural content in simple, clear language.' },
-        { role: 'user', content: prompt }
-      ],
-      model: 'llama-3.1-8b-instant',
-      temperature: 0.5,
-      max_tokens: 512
-    });
-
-    const result = completion.choices[0]?.message?.content || 'Unable to process request.';
+    const result = await openaiChat([
+      { role: 'system', content: 'You are a helpful assistant that summarizes and translates agricultural content in simple, clear language.' },
+      { role: 'user', content: prompt }
+    ], { temperature: 0.5, max_tokens: 512 }) || 'Unable to process request.';
 
     res.json({
       result,
       action
     });
   } catch (error) {
-    console.error('Groq API error:', error);
+    console.error('OpenAI API error:', error);
     res.status(500).json({ 
       message: 'Error processing text', 
       error: error.message 

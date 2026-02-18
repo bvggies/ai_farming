@@ -26,7 +26,7 @@ Add these in **Settings → Environment Variables:**
 - `DATABASE_URL` - Your Neon pooled connection string
 - `JWT_SECRET` - Any random string
 - `REACT_APP_API_URL` - `/api`
-- `GROQ_API_KEY` - (optional, for AI features)
+- `OPENAI_API_KEY` - (for AI chat and voice transcription)
 - `CLOUDINARY_*` - (optional, for image uploads)
 
 ### Step 4: Deploy

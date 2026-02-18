@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiMessageSquare, FiBook, FiUser, FiSettings } from 'react-icons/fi';
+import { FiHome, FiMessageSquare, FiBook, FiUser, FiMessageCircle, FiShield } from 'react-icons/fi';
 import api from '../services/api';
 import './Navbar.css';
 
@@ -28,13 +28,13 @@ const Navbar = ({ user, onLogout }) => {
   const navLinks = [
     { path: '/dashboard', icon: FiHome, label: 'Home' },
     { path: '/posts', icon: FiMessageSquare, label: 'Community' },
-    { path: '/ai-chat', icon: FiSettings, label: 'AI Assistant' },
+    { path: '/ai-chat', icon: FiMessageCircle, label: 'AI Assistant' },
     { path: '/knowledge', icon: FiBook, label: 'Knowledge' },
     { path: '/profile', icon: FiUser, label: 'Profile' }
   ];
 
   if (user?.role === 'admin') {
-    navLinks.push({ path: '/admin', icon: FiSettings, label: 'Admin' });
+    navLinks.push({ path: '/admin', icon: FiShield, label: 'Admin' });
   }
 
   // Determine if mobile screen

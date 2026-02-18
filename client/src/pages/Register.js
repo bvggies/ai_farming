@@ -7,8 +7,6 @@ const Register = ({ onLogin }) => {
     name: '',
     email: '',
     password: '',
-    farmSize: '',
-    poultryType: '',
     preferredLanguage: 'en'
   });
   const [error, setError] = useState('');
@@ -77,32 +75,6 @@ const Register = ({ onLogin }) => {
               minLength={6}
               placeholder="Create a password"
             />
-          </div>
-
-          <div className="form-group">
-            <label>Farm Size</label>
-            <input
-              type="text"
-              name="farmSize"
-              value={formData.farmSize}
-              onChange={handleChange}
-              placeholder="e.g., Small (50-200 birds), Medium (200-1000), Large (1000+)"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Poultry Type</label>
-            <select
-              name="poultryType"
-              value={formData.poultryType}
-              onChange={handleChange}
-            >
-              <option value="">Select poultry type</option>
-              <option value="Layers">Layers (Egg production)</option>
-              <option value="Broilers">Broilers (Meat production)</option>
-              <option value="Mixed">Mixed</option>
-              <option value="Other">Other</option>
-            </select>
           </div>
 
           <div className="form-group">

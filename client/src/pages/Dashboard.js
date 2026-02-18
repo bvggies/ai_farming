@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  FiMessageSquare, FiBook, FiSettings, FiArrowRight, FiTrendingUp,
+  FiMessageSquare, FiBook, FiSettings, FiMessageCircle, FiArrowRight, FiTrendingUp,
   FiCalendar, FiClock, FiBell, FiActivity, FiBarChart2, FiPlus,
   FiCheckCircle, FiX
 } from 'react-icons/fi';
@@ -215,7 +215,7 @@ const Dashboard = ({ user }) => {
                   <span>Share Experience</span>
                 </Link>
                 <Link to="/ai-chat" className="action-item">
-                  <FiSettings size={24} />
+                  <FiMessageCircle size={24} />
                   <span>AI Assistant</span>
                 </Link>
                 <Link to="/knowledge" className="action-item">
@@ -268,8 +268,9 @@ const Dashboard = ({ user }) => {
                 </div>
               ) : (
                 <div className="empty-state">
-                  <FiBell size={48} color="#ccc" />
-                  <p>No upcoming reminders</p>
+                  <FiBell className="empty-state-icon" size={48} />
+                  <h3>No upcoming reminders</h3>
+                  <p>Create a reminder so you never miss vaccinations or tasks.</p>
                   <button className="btn btn-outline" onClick={() => setShowReminderModal(true)}>
                     Create Reminder
                   </button>
@@ -300,7 +301,9 @@ const Dashboard = ({ user }) => {
                 </div>
               ) : (
                 <div className="empty-state">
-                  <p>No posts yet. Be the first to share!</p>
+                  <FiTrendingUp className="empty-state-icon" size={48} />
+                  <h3>No posts yet</h3>
+                  <p>Be the first to share a tip, question, or experience with the community.</p>
                   <Link to="/create-post" className="btn btn-primary">Create Post</Link>
                 </div>
               )}
@@ -310,14 +313,6 @@ const Dashboard = ({ user }) => {
             <div className="dashboard-card">
               <h2><FiActivity /> Your Profile</h2>
               <div className="profile-summary">
-                <div className="profile-item">
-                  <strong>Farm Size:</strong>
-                  <span>{user.farmSize || 'Not specified'}</span>
-                </div>
-                <div className="profile-item">
-                  <strong>Poultry Type:</strong>
-                  <span>{user.poultryType || 'Not specified'}</span>
-                </div>
                 <div className="profile-item">
                   <strong>Language:</strong>
                   <span>{user.preferredLanguage || 'English'}</span>

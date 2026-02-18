@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FiHome, FiMessageSquare, FiBook, FiUser, FiCpu, FiSettings } from 'react-icons/fi';
+import { FiHome, FiMessageSquare, FiBook, FiUser, FiMessageCircle, FiShield } from 'react-icons/fi';
 import './MobileBar.css';
 
 const MobileBar = ({ user }) => {
@@ -9,13 +9,13 @@ const MobileBar = ({ user }) => {
   const tabs = [
     { to: '/dashboard', icon: FiHome, label: 'Home' },
     { to: '/posts', icon: FiMessageSquare, label: 'Posts' },
-    { to: '/ai-chat', icon: FiCpu, label: 'AI' },
+    { to: '/ai-chat', icon: FiMessageCircle, label: 'AI' },
     { to: '/knowledge', icon: FiBook, label: 'KB' },
     { to: '/profile', icon: FiUser, label: 'Me' }
   ];
 
   if (user?.role === 'admin') {
-    tabs.splice(4, 0, { to: '/admin', icon: FiSettings, label: 'Admin' });
+    tabs.splice(4, 0, { to: '/admin', icon: FiShield, label: 'Admin' });
   }
 
   return (

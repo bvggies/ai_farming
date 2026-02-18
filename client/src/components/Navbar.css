@@ -1,8 +1,8 @@
 .navbar {
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, var(--color-primary, #2e7d32) 0%, var(--color-primary-hover, #1b5e20) 100%);
   color: #fff;
   padding: 12px 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   position: sticky;
   top: 0;
   z-index: 900;

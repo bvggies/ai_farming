@@ -15,7 +15,7 @@ Go to your Vercel project → Settings → Environment Variables:
 **Required Variables:**
 - `DATABASE_URL` - Your Neon pooled connection string (with `?sslmode=require`)
 - `JWT_SECRET` - Any long random string (e.g., `your-super-secret-jwt-key-here`)
-- `GROQ_API_KEY` - Your Groq API key
+- `OPENAI_API_KEY` - Your OpenAI API key (for AI chat and voice)
 - `CLOUDINARY_CLOUD_NAME` - Your Cloudinary cloud name
 - `CLOUDINARY_API_KEY` - Your Cloudinary API key
 - `CLOUDINARY_API_SECRET` - Your Cloudinary API secret

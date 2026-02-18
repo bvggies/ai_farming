@@ -11,9 +11,9 @@ module.exports = async (req, res) => {
     
     // Map language codes: 'tw' for Twi, 'en' for English, or 'auto' for auto-detect
     const langCode = language === 'tw' ? 'tw' : (language === 'en' ? 'en' : null);
-    const apiKey = process.env.GROQ_API_KEY || process.env.GROQ || process.env.GROQ_API;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ message: 'Missing GROQ_API_KEY' });
+      return res.status(500).json({ message: 'Missing OPENAI_API_KEY. Add your OpenAI API key to environment variables.' });
     }
 
     const buffer = Buffer.from(audioBase64, 'base64');
@@ -31,10 +31,10 @@ module.exports = async (req, res) => {
     formParts.push(buffer);
     formParts.push(`\r\n--${boundary}\r\n`);
     
-    // Add model field
+    // Add model field (OpenAI Whisper)
     formParts.push(
       `Content-Disposition: form-data; name="model"\r\n\r\n`,
-      `whisper-large-v3\r\n`,
+      `whisper-1\r\n`,
       `--${boundary}\r\n`
     );
     
@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
       Buffer.isBuffer(part) ? part : Buffer.from(part, 'utf8')
     ));
 
-    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Groq transcription error:', errText);
+      console.error('OpenAI Whisper transcription error:', errText);
       return res.status(500).json({ 
         message: 'Transcription failed', 
         error: errText,

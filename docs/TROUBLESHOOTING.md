@@ -40,7 +40,7 @@ Go to Vercel → Project → Settings → Environment Variables
 - ✅ `REACT_APP_API_URL` - Set to `/api`
 
 **Optional (for later features):**
-- `GROQ_API_KEY`
+- `OPENAI_API_KEY`
 - `CLOUDINARY_CLOUD_NAME`
 - `CLOUDINARY_API_KEY`
 - `CLOUDINARY_API_SECRET`

@@ -57,6 +57,10 @@ module.exports = async (req, res) => {
         values.push(updates.preferredLanguage);
       }
       if (updates.role) {
+        const allowedRoles = ['worker', 'manager', 'supervisor', 'admin', 'farmer', 'farm_supervisor'];
+        if (!allowedRoles.includes(updates.role)) {
+          return res.status(400).json({ message: 'Invalid role.' });
+        }
         updateFields.push(`role = $${paramCount++}`);
         values.push(updates.role);
       }

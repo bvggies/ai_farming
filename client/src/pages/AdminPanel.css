@@ -298,6 +298,18 @@
 .badge-warning { background: #fff3e0; color: #e65100; }
 .badge-danger { background: #ffebee; color: #c62828; }
 .badge-primary { background: #e3f2fd; color: #1976d2; }
+.badge-info { background: #e0f7fa; color: #006064; }
+
+.action-buttons .role-select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 120px;
+}
 
 .posts-grid, .knowledge-grid {
   display: grid;

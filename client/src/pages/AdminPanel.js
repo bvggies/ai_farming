@@ -23,7 +23,6 @@ const AdminPanel = ({ user }) => {
   const [postForm, setPostForm] = useState({ title: '', content: '', type: 'tip' });
   const [knowledgeFilter, setKnowledgeFilter] = useState('all'); // all | faq | other
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('admin_dark') === '1');
-  const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     fetchStats();
@@ -42,10 +41,9 @@ const AdminPanel = ({ user }) => {
 
   // Auto refresh stats every 30s
   useEffect(() => {
-    if (!autoRefresh) return;
     const id = setInterval(fetchStats, 30000);
     return () => clearInterval(id);
-  }, [autoRefresh]);
+  }, []);
 
   const fetchStats = async () => {
     try {
@@ -266,9 +264,6 @@ const AdminPanel = ({ user }) => {
       <div className="admin-header">
         <h1><FiShield /> Admin Dashboard</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button className="btn btn-outline" onClick={() => setAutoRefresh(x => !x)} title="Toggle auto-refresh">
-            <FiRefreshCw /> {autoRefresh ? 'Auto' : 'Manual'}
-          </button>
           <button className="btn btn-outline" onClick={() => setDarkMode(d => !d)} title="Toggle theme">
             {darkMode ? <FiSun /> : <FiMoon />} {darkMode ? 'Light' : 'Dark'}
           </button>
@@ -490,8 +485,8 @@ const AdminPanel = ({ user }) => {
                     <td>{userItem.name}</td>
                     <td>{userItem.email}</td>
                     <td>
-                      <span className={`badge badge-${userItem.role === 'admin' ? 'danger' : 'primary'}`}>
-                        {userItem.role}
+                      <span className={`badge badge-${userItem.role === 'admin' ? 'danger' : userItem.role === 'manager' ? 'info' : userItem.role === 'supervisor' ? 'warning' : 'primary'}`}>
+                        {userItem.role === 'admin' ? 'Admin' : userItem.role === 'manager' ? 'Manager' : userItem.role === 'supervisor' ? 'Supervisor' : 'Worker'}
                       </span>
                     </td>
                     <td>
@@ -501,11 +496,21 @@ const AdminPanel = ({ user }) => {
                     </td>
                     <td>
                       <div className="action-buttons">
+                        <select
+                          value={userItem.role}
+                          onChange={(e) => handleUpdateUser(userItem.id, { role: e.target.value })}
+                          className="role-select"
+                          title="Change role"
+                        >
+                          <option value="worker">Worker</option>
+                          <option value="manager">Manager</option>
+                          <option value="supervisor">Supervisor</option>
+                          <option value="admin">Admin</option>
+                          <option value="farmer">Worker (legacy)</option>
+                          <option value="farm_supervisor">Manager (legacy)</option>
+                        </select>
                         <button className="btn-icon" onClick={() => handleUpdateUser(userItem.id, { isActive: !userItem.isActive })} title={userItem.isActive ? 'Deactivate' : 'Activate'}>
                           {userItem.isActive ? <FiEyeOff /> : <FiEye />}
-                        </button>
-                        <button className="btn-icon" onClick={() => handleUpdateUser(userItem.id, { role: userItem.role === 'admin' ? 'farmer' : 'admin' })} title="Toggle Role">
-                          <FiShield />
                         </button>
                         <button className="btn-icon btn-danger" onClick={() => handleDeleteUser(userItem.id)} title="Delete">
                           <FiTrash2 />
@@ -640,10 +645,12 @@ const AdminPanel = ({ user }) => {
               <div className="form-group">
                 <label>Role</label>
                 <select
-                  value={formData.role || 'farmer'}
+                  value={formData.role || 'worker'}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 >
-                  <option value="farmer">Farmer</option>
+                  <option value="worker">Worker</option>
+                  <option value="manager">Manager</option>
+                  <option value="supervisor">Supervisor</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>

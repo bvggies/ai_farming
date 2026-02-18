@@ -7,6 +7,11 @@ module.exports = async (req, res) => {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
+  // Registration is closed: only Appah Farm workers/managers/supervisors added by admins
+  return res.status(403).json({
+    message: 'Registration is closed. Only Appah Farm workers, managers, and supervisors can use this system. Contact your administrator for an account.',
+  });
+
   try {
     const { name, email, password, farmSize = '', poultryType = '', preferredLanguage = 'en' } = req.body || {};
     

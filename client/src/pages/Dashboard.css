@@ -271,12 +271,30 @@
 
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: #999;
+  padding: 48px 24px;
+  color: var(--color-text-muted, #5f6368);
+}
+
+.empty-state .empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+  display: block;
+}
+
+.empty-state h3 {
+  font-size: 1.1rem;
+  color: var(--color-text, #1a1a1a);
+  margin-bottom: 8px;
 }
 
 .empty-state p {
-  margin: 15px 0;
+  margin: 0 0 16px 0;
+  font-size: 0.95rem;
+}
+
+.empty-state .btn {
+  margin-top: 4px;
 }
 
 .modal-overlay {

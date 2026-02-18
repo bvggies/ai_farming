@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { authService } from '../services/authService';
+import './Login.css';
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -27,10 +27,10 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h1 style={titleStyle}>🐔 Welcome to Appah Farms Knowledge Hub</h1>
-        <p style={subtitleStyle}>Sign in to your account</p>
+    <div className="login-page">
+      <div className="login-card">
+        <h1>🐔 Appah Farms Knowledge Hub</h1>
+        <p className="login-subtitle">Sign in to your account</p>
 
         {error && <div className="alert alert-error">{error}</div>}
 
@@ -44,6 +44,7 @@ const Login = ({ onLogin }) => {
               onChange={handleChange}
               required
               placeholder="Enter your email"
+              autoComplete="email"
             />
           </div>
 
@@ -56,61 +57,21 @@ const Login = ({ onLogin }) => {
               onChange={handleChange}
               required
               placeholder="Enter your password"
+              autoComplete="current-password"
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={buttonStyle} disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        <p style={linkStyle}>
-          Don't have an account? <Link to="/register">Register here</Link>
+        <p className="login-footer">
+          Appah Farm workers, managers & supervisors only. Contact your administrator for an account.
         </p>
       </div>
     </div>
   );
-};
-
-const containerStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  minHeight: '100vh',
-  padding: '20px'
-};
-
-const cardStyle = {
-  background: 'white',
-  borderRadius: '12px',
-  padding: '40px',
-  width: '100%',
-  maxWidth: '400px',
-  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-};
-
-const titleStyle = {
-  fontSize: '28px',
-  marginBottom: '10px',
-  textAlign: 'center',
-  color: '#333'
-};
-
-const subtitleStyle = {
-  textAlign: 'center',
-  color: '#666',
-  marginBottom: '30px'
-};
-
-const buttonStyle = {
-  width: '100%',
-  marginTop: '10px'
-};
-
-const linkStyle = {
-  textAlign: 'center',
-  marginTop: '20px',
-  color: '#666'
 };
 
 export default Login;

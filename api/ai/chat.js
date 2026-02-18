@@ -32,24 +32,24 @@ Ma nkɔmmɔ wɔ Twi kasa mu a ɛyɛ den kɛse, na ɛboa. Sɛ wunim biribi a, ka 
 
 Always respond in simple, clear language that farmers with limited technical knowledge can understand. Be encouraging and supportive. If you're unsure about something, recommend consulting a veterinarian or agricultural expert.`;
 
-    const apiKey = process.env.GROQ_API_KEY || process.env.GROQ || process.env.GROQ_API;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ message: 'Missing GROQ_API_KEY' });
+      return res.status(500).json({ message: 'Missing OPENAI_API_KEY. Add your OpenAI API key to environment variables.' });
     }
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
         temperature: 0.7,
         max_tokens: 1024,
         messages: [
           { role: 'system', content: systemPrompt },
-          ...context,
+          ...(Array.isArray(context) ? context : []),
           { role: 'user', content: message }
         ]
       })
