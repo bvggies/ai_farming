@@ -165,7 +165,6 @@ router.post('/:id/like', auth, async (req, res) => {
       }
     });
 
-    // Notification can be implemented via Prisma in notifications route later
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -232,20 +231,6 @@ router.post('/:id/comment', auth, async (req, res) => {
       }
     });
 
-    // Notify post author (if not commenting on own post)
-    if (post.authorId !== req.user.id) {
-      try {
-        await prisma.notification.create({
-          data: {
-            userId: post.authorId,
-            type: 'comment',
-            title: 'New comment on your post',
-            message: `${req.user.name || 'Someone'} commented on "${post.title}".`,
-            link: `/posts/${post.id}`
-          }
-        });
-      } catch (e) { /* ignore notification errors */ }
-    }
 
     const updated = await prisma.post.findUnique({
       where: { id: req.params.id },

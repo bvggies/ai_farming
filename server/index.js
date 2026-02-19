@@ -22,7 +22,6 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/knowledge', require('./routes/knowledge'));
-app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', require('./routes/admin'));
 
 // Simple health check so deployers can verify the server is up

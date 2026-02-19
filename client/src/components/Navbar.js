@@ -4,33 +4,11 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiMessageSquare, FiBook, FiUser, FiMessageCircle, FiShield, FiBell } from 'react-icons/fi';
-import api from '../services/api';
+import { FiHome, FiMessageSquare, FiBook, FiUser, FiMessageCircle, FiShield } from 'react-icons/fi';
 import './Navbar.css';
 
 const Navbar = ({ user, onLogout }) => {
   const location = useLocation();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  /** Poll unread notification count every 30s; stop on 404 (e.g. if endpoint not deployed) */
-  useEffect(() => {
-    let cancelled = false;
-    let intervalId = null;
-    const fetchUnreadCount = async () => {
-      try {
-        const response = await api.get('/notifications/unread-count');
-        if (!cancelled) setUnreadCount(response.data?.count ?? 0);
-      } catch (error) {
-        if (cancelled) return;
-        if (error.response?.status === 404 && intervalId) clearInterval(intervalId);
-      }
-    };
-    if (user) {
-      fetchUnreadCount();
-      intervalId = setInterval(fetchUnreadCount, 30000);
-    }
-    return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
-  }, [user]);
 
   // Main nav items; Admin link appended below for admin users
   const navLinks = [
@@ -80,17 +58,6 @@ const Navbar = ({ user, onLogout }) => {
               </Link>
             );
           })}
-          <Link
-            to="/notifications"
-            className={`navbar__link ${location.pathname === '/notifications' ? 'is-active' : ''}`}
-            title="Notifications"
-          >
-            <span className="navbar__notifications-wrap">
-              <FiBell className="navbar__icon" />
-              {unreadCount > 0 && <span className="navbar__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-            </span>
-            <span className="navbar__label">Notifications</span>
-          </Link>
           <button onClick={onLogout} className="navbar__logout">
             Logout
           </button>

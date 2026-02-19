@@ -19,7 +19,6 @@ import AIChat from './pages/AIChat';
 import KnowledgeBase from './pages/KnowledgeBase';
 import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
-import Notifications from './pages/Notifications';
 import Navbar from './components/Navbar';
 import MobileBar from './components/MobileBar';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -97,7 +96,6 @@ function App() {
         {user && (
           <header className="app-mobile-header" aria-hidden="true">
             <span className="app-mobile-header__title">🐔 Appah Farms</span>
-            <Link to="/notifications" className="app-mobile-header__bell" aria-label="Notifications">🔔</Link>
           </header>
         )}
         <main className="App__main">
@@ -145,10 +143,6 @@ function App() {
           <Route 
             path="/admin" 
             element={user && user.role === 'admin' ? <AdminPanel user={user} /> : <Navigate to="/dashboard" />} 
-          />
-          <Route 
-            path="/notifications" 
-            element={user ? <Notifications user={user} /> : <Navigate to="/login" />} 
           />
           {/* Default path: send to dashboard if logged in, else login */}
           <Route 

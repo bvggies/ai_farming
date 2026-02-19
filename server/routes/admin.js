@@ -139,12 +139,6 @@ router.get('/stats', adminAuth, async (req, res) => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    let totalNotifications = 0;
-    try {
-      totalNotifications = await prisma.notification.count();
-    } catch (_) {
-      // Notification table may not exist in some deployments
-    }
 
     const [
       totalUsers,
@@ -177,8 +171,7 @@ router.get('/stats', adminAuth, async (req, res) => {
       approvedPosts,
       totalKnowledge,
       newUsersLast7Days,
-      pendingPosts,
-      totalNotifications
+      pendingPosts
     };
 
     const breakdown = {

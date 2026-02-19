@@ -628,14 +628,6 @@ const AdminPanel = ({ user }) => {
               </div>
             </div>
 
-            <div className="stat-card stat-secondary">
-              <div className="stat-icon"><FiTrendingUp /></div>
-              <div className="stat-content">
-                <h3>Notifications</h3>
-                <p className="stat-number">{stats.overview.totalNotifications}</p>
-                <small>total sent</small>
-              </div>
-            </div>
           </div>
 
           <div className="charts-grid">

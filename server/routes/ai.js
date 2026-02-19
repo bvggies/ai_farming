@@ -5,7 +5,6 @@
  */
 const express = require('express');
 const KnowledgeBase = require('../models/KnowledgeBase');
-const Notification = require('../models/Notification');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -78,14 +77,6 @@ Always respond in simple, clear language that farmers with limited technical kno
       { role: 'user', content: fullMessage }
     ], { temperature: 0.7, max_tokens: 1024 }) || 'I apologize, but I could not generate a response.';
 
-    // Create notification for AI suggestion
-    await Notification.create({
-      user: req.user._id,
-      type: 'ai_suggestion',
-      title: 'AI Assistant Response',
-      message: `New AI response available for your question`,
-      link: '/ai-chat'
-    });
 
     res.json({
       response: aiResponse,

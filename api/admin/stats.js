@@ -26,7 +26,6 @@ module.exports = async (req, res) => {
       approvedPosts,
       pendingPosts,
       totalKnowledge,
-      totalNotifications,
       recentUsers
     ] = await Promise.all([
       safeQuery(sql`SELECT COUNT(*) as count FROM users`),
@@ -35,7 +34,6 @@ module.exports = async (req, res) => {
       safeQuery(sql`SELECT COUNT(*) as count FROM posts WHERE is_approved = true`),
       safeQuery(sql`SELECT COUNT(*) as count FROM posts WHERE is_approved = false`),
       safeQuery(sql`SELECT COUNT(*) as count FROM knowledge_base`),
-      safeQuery(sql`SELECT COUNT(*) as count FROM notifications`),
       safeQuery(sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`)
     ]);
 
@@ -89,7 +87,6 @@ module.exports = async (req, res) => {
         approvedPosts,
         pendingPosts,
         totalKnowledge,
-        totalNotifications,
         newUsersLast7Days: recentUsers
       },
       breakdown: {
