@@ -218,6 +218,22 @@ const AdminPanel = ({ user }) => {
     }
   };
 
+  /** Add 8 new FAQs to the knowledge base */
+  const handleAdd8FAQs = async () => {
+    if (!window.confirm('This will add 8 new unique FAQs to the knowledge base. Continue?')) return;
+    try {
+      const response = await api.post('/admin/knowledge/add-8-faqs');
+      alert(response.data.message || `Added ${response.data.added || 0} FAQs`);
+      if (response.data.skipped > 0) {
+        alert(`Skipped ${response.data.skipped} duplicates: ${response.data.skippedTitles.join(', ')}`);
+      }
+      fetchKnowledge();
+      fetchStats();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to add FAQs');
+    }
+  };
+
   const handlePostApprove = async (postId, isApproved) => {
     try {
       await api.put('/admin/posts/approve', { postId, isApproved });
@@ -848,6 +864,9 @@ const AdminPanel = ({ user }) => {
               </button>
               <button className="btn btn-outline" onClick={handleRemoveDuplicates} title="Remove duplicate entries">
                 <FiRefreshCw /> Remove Duplicates
+              </button>
+              <button className="btn btn-primary" onClick={handleAdd8FAQs} title="Add 8 new FAQs">
+                <FiPlus /> Add 8 FAQs
               </button>
               {renderExportDropdown('knowledge')}
             </div>
