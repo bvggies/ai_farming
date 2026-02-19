@@ -205,6 +205,19 @@ const AdminPanel = ({ user }) => {
     }
   };
 
+  /** Remove duplicate knowledge entries based on title */
+  const handleRemoveDuplicates = async () => {
+    if (!window.confirm('This will remove duplicate entries based on title. Keep the oldest entry and delete newer duplicates. Continue?')) return;
+    try {
+      const response = await api.post('/admin/knowledge/remove-duplicates');
+      alert(response.data.message || `Removed ${response.data.removed || 0} duplicate entries`);
+      fetchKnowledge();
+      fetchStats();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to remove duplicates');
+    }
+  };
+
   const handlePostApprove = async (postId, isApproved) => {
     try {
       await api.put('/admin/posts/approve', { postId, isApproved });
@@ -832,6 +845,9 @@ const AdminPanel = ({ user }) => {
               </button>
               <button className="btn btn-outline" onClick={() => { setShowKnowledgeModal(true); setFormData({}); setEditingItem(null); }}>
                 <FiPlus /> Add Entry
+              </button>
+              <button className="btn btn-outline" onClick={handleRemoveDuplicates} title="Remove duplicate entries">
+                <FiRefreshCw /> Remove Duplicates
               </button>
               {renderExportDropdown('knowledge')}
             </div>
