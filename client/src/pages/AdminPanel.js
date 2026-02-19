@@ -7,7 +7,7 @@
  */
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  FiUsers, FiFileText, FiBook, FiTrendingUp, FiCheckCircle, FiXCircle, 
+  FiUsers, FiFileText, FiBook, FiCheckCircle, FiXCircle, 
   FiEdit, FiTrash2, FiPlus, FiBarChart2, FiClock, FiShield,
   FiSearch, FiFilter, FiRefreshCw, FiEye, FiEyeOff, FiDownload, FiSun, FiMoon, FiChevronDown
 } from 'react-icons/fi';
