@@ -72,7 +72,17 @@ const KnowledgeBase = ({ user }) => {
     setExpandedFaqs(newExpanded);
   };
 
-  const faqs = entries.filter(e => (e.category || '').toLowerCase() === 'faq');
+  // Filter and sort FAQs - newest first, then alphabetically by title
+  const faqs = entries
+    .filter(e => (e.category || '').toLowerCase() === 'faq')
+    .sort((a, b) => {
+      // First sort by creation date (newest first)
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      if (dateB - dateA !== 0) return dateB - dateA;
+      // Then alphabetically by title
+      return (a.title || '').localeCompare(b.title || '');
+    });
   const otherEntries = entries.filter(e => (e.category || '').toLowerCase() !== 'faq');
 
   if (selectedEntry) {
